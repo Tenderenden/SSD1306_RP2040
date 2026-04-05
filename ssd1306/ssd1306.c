@@ -1,0 +1,51 @@
+#include "ssd1306.h"
+#include <hardware/i2c.h>
+#include <pico/platform/compiler.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "pico/stdlib.h"
+
+void ssd1306_send_cmd(uint8_t cmd){
+    uint8_t cmd_buffer[] = {0x80, cmd};
+    i2c_write_blocking(i2c0, SSD1306_ADDR, cmd_buffer, 2, false);
+}
+
+void ssd1306_init() {
+    printf("Initializing OLED\n");
+    uint8_t config_cmds[]={
+        SSD1306_SET_DISPLAY_OFF_CMD,
+        SSD1306_SET_DISPLAY_CLK_DIVIDE_FREQ_CMD,
+        ((8<<4)|0),
+        SSD1306_SET_MULTIPLEX_RATIO_CMD,
+        SSD1306_MUX_RATIO_32,
+        SSD1306_SET_DISPLAY_OFFSET_CMD,
+        0x0U,
+        SSD1306_SET_DISPLAY_START_LINE_CMD,
+        SSD1306_SET_SEGMENT_REMAP_NORMAL_CMD,
+        SSD1306_SET_COM_SCAN_DIR_NORMAL_CMD,
+        SSD1306_SET_COM_HW_CONFIG_CMD,
+        0x12U,
+        SSD1306_SET_CONTRAST_CMD,
+        0x7F,
+        SSD1306_DISPLAY_ON_RAM_CMD,
+        SSD1306_SET_NORMAL_DISPLAY_CMD,
+        SSD1306_CHARGE_PUMP_SETTING_CMD,
+        0x14U,
+        SSD1306_SET_DISPLAY_ON_CMD,
+        SSD1306_DISPLAY_ON_FULL_CMD,
+        SSD1306_SET_DISPLAY_ON_CMD
+    };
+
+    i2c_init(i2c_default, 400 * 1000);
+    gpio_set_function(4, GPIO_FUNC_I2C);
+    gpio_set_function(5, GPIO_FUNC_I2C);
+    gpio_pull_up(4);
+    gpio_pull_up(6);
+    for(uint8_t i=0; i<count_of(config_cmds);i++){
+        ssd1306_send_cmd(config_cmds[i]);
+    }
+}
+
+
