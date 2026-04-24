@@ -7,6 +7,8 @@
 #define SSD1306_WIDTH 128
 #define SSD1306_HEIGHT 32
 
+#define SSD1306_SDA_PIN 4
+#define SSD1306_SCK_PIN 5
 
 /* Fundamental commands */
 #define SSD1306_SET_CONTRAST_CMD 0x81U
@@ -42,6 +44,6 @@
 
 
 void ssd1306_init(void);
-
+void ssd1306_send_cmd(uint8_t cmd);
 
 #endif /* SSD1306_H */

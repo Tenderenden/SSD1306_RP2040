@@ -39,8 +39,10 @@ int main() {
     printf("Starting_program\n");
     ssd1306_init();
     while (true) {
+        ssd1306_send_cmd(SSD1306_DISPLAY_ON_FULL_CMD);
         pico_set_led(true);
         sleep_ms(LED_DELAY_MS);
+        ssd1306_send_cmd(SSD1306_DISPLAY_ON_RAM_CMD);
         pico_set_led(false);
         sleep_ms(LED_DELAY_MS);
         printf("Loop done\n");

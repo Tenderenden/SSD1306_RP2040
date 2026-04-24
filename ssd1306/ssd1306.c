@@ -26,7 +26,7 @@ void ssd1306_init() {
         SSD1306_SET_SEGMENT_REMAP_NORMAL_CMD,
         SSD1306_SET_COM_SCAN_DIR_NORMAL_CMD,
         SSD1306_SET_COM_HW_CONFIG_CMD,
-        0x12U,
+        0x02U,
         SSD1306_SET_CONTRAST_CMD,
         0x7F,
         SSD1306_DISPLAY_ON_RAM_CMD,
@@ -34,15 +34,14 @@ void ssd1306_init() {
         SSD1306_CHARGE_PUMP_SETTING_CMD,
         0x14U,
         SSD1306_SET_DISPLAY_ON_CMD,
-        SSD1306_DISPLAY_ON_FULL_CMD,
-        SSD1306_SET_DISPLAY_ON_CMD
+        SSD1306_DISPLAY_ON_FULL_CMD
     };
 
     i2c_init(i2c_default, 400 * 1000);
-    gpio_set_function(4, GPIO_FUNC_I2C);
-    gpio_set_function(5, GPIO_FUNC_I2C);
-    gpio_pull_up(4);
-    gpio_pull_up(6);
+    gpio_set_function(SSD1306_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(SSD1306_SCK_PIN, GPIO_FUNC_I2C);
+    gpio_pull_up(SSD1306_SDA_PIN);
+    gpio_pull_up(SSD1306_SCK_PIN);
     for(uint8_t i=0; i<count_of(config_cmds);i++){
         ssd1306_send_cmd(config_cmds[i]);
     }
