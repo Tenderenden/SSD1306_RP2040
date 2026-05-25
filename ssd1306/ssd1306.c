@@ -1,15 +1,28 @@
 #include "ssd1306.h"
 #include <hardware/i2c.h>
 #include <pico/platform/compiler.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "pico/stdlib.h"
+
+ssd1306_buffer_t ssd1306_buffer;
 
 void ssd1306_send_cmd(uint8_t cmd){
     uint8_t cmd_buffer[] = {0x80, cmd};
     i2c_write_blocking(i2c0, SSD1306_ADDR, cmd_buffer, 2, false);
+}
+
+void ssd1306_send_data(ssd1306_buffer_t *buffer)
+{
+    uint8_t *data_buffer = malloc(buffer->length + 1);
+    data_buffer[0] = 0x40;
+    memcpy(data_buffer+1, buffer->buffer, buffer->length);
+    i2c_write_blocking(i2c0, SSD1306_ADDR, data_buffer, (buffer->length)+1, false);
+    free(data_buffer);
 }
 
 void ssd1306_init() {
@@ -45,6 +58,11 @@ void ssd1306_init() {
     for(uint8_t i=0; i<count_of(config_cmds);i++){
         ssd1306_send_cmd(config_cmds[i]);
     }
+}
+
+void ssd1306_draw()
+{
+    ssd1306_send_data(&ssd1306_buffer);
 }
 
 
