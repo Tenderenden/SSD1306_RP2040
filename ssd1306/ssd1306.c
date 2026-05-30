@@ -47,8 +47,12 @@ void ssd1306_init() {
         SSD1306_CHARGE_PUMP_SETTING_CMD,
         0x14U,
         SSD1306_SET_DISPLAY_ON_CMD,
-        SSD1306_DISPLAY_ON_FULL_CMD
+        // SSD1306_DISPLAY_ON_FULL_CMD
     };
+
+    //Initialize buffer
+    ssd1306_buffer.length = SSD1306_WIDTH * SSD1306_HEIGHT;
+    memset(ssd1306_buffer.buffer, 0, ssd1306_buffer.length);
 
     i2c_init(i2c_default, 400 * 1000);
     gpio_set_function(SSD1306_SDA_PIN, GPIO_FUNC_I2C);
@@ -60,9 +64,38 @@ void ssd1306_init() {
     }
 }
 
-void ssd1306_draw()
+void ssd1306_draw(void)
 {
     ssd1306_send_data(&ssd1306_buffer);
 }
 
+void ssd1306_clear_buff(void)
+{
+    memset(ssd1306_buffer.buffer, 0, ssd1306_buffer.length);
+}
 
+void ssd1306_fill_buff(void)
+{
+    memset(ssd1306_buffer.buffer, 0xFF, ssd1306_buffer.length);
+}
+
+void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
+{
+    uint8_t cmds[] = {0x80, 0x0, 0x0, 0x0};
+    
+    // Set horizontal adressing mode
+    cmds[1] = 0x20;
+    i2c_write_blocking(i2c0, SSD1306_ADDR, cmds, 2, false);
+    
+    // Set column address
+    cmds[1] = 0x21;
+    cmds[2] = col_start; //0 - 127
+    cmds[3] = col_stop; //0 - 127
+    i2c_write_blocking(i2c0, SSD1306_ADDR, cmds, 4, false);
+    
+    // Set page address
+    cmds[1] = 0x22;
+    cmds[2] = page_start; //0 - 7
+    cmds[3] = page_stop; //0 - 7
+    i2c_write_blocking(i2c0, SSD1306_ADDR, cmds, 4, false);
+}

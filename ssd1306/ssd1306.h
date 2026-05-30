@@ -2,6 +2,7 @@
 #define SSD1306_H
 
 #include "hardware/i2c.h"
+#include <stdint.h>
 
 #define SSD1306_ADDR 0x3CU
 #define SSD1306_WIDTH 128
@@ -47,6 +48,9 @@ typedef struct ssd1306_buffer{
 }ssd1306_buffer_t;
 
 void ssd1306_init(void);
+void ssd1306_draw(void);
 void ssd1306_send_cmd(uint8_t cmd);
-
+void ssd1306_clear_buff(void);
+void ssd1306_fill_buff(void);
+void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
 #endif /* SSD1306_H */
