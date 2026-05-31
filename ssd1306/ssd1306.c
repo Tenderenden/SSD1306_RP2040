@@ -27,41 +27,52 @@ void ssd1306_send_data(ssd1306_buffer_t *buffer)
 
 void ssd1306_init() {
     printf("Initializing OLED\n");
+    uint8_t start_cmd = 0x80;
     uint8_t config_cmds[]={
         SSD1306_SET_DISPLAY_OFF_CMD,
         SSD1306_SET_DISPLAY_CLK_DIVIDE_FREQ_CMD,
-        ((8<<4)|0),
+        (8<<4)|0,
+        // 0x80U,
         SSD1306_SET_MULTIPLEX_RATIO_CMD,
-        SSD1306_MUX_RATIO_32,
+        SSD1306_HEIGHT - 1,
         SSD1306_SET_DISPLAY_OFFSET_CMD,
         0x0U,
-        SSD1306_SET_DISPLAY_START_LINE_CMD,
-        SSD1306_SET_SEGMENT_REMAP_NORMAL_CMD,
-        SSD1306_SET_COM_SCAN_DIR_NORMAL_CMD,
+        SSD1306_SET_DISPLAY_START_LINE_CMD | 0x00U,
+        SSD1306_CHARGE_PUMP_SETTING_CMD,
+        0x14U,
+        SSD1306_ADDRSET_MEMORY_ADDRESSING_MODE_CMD,
+        0x00U,
+        SSD1306_SET_SEGMENT_REMAP_NORMAL_CMD | 0x1,
+        SSD1306_SET_COM_SCAN_DIR_REMAPPED_CMD,
+        // SSD1306_SET_COM_SCAN_DIR_NORMAL_CMD,
         SSD1306_SET_COM_HW_CONFIG_CMD,
         0x02U,
         SSD1306_SET_CONTRAST_CMD,
         0x7F,
+        // SSD1306_PRECHARGE_PERIOD_CMD,
+        // 0x22,
+        // SSD1306_SETVCOM_LEVEL,
+        // 0x40,
         SSD1306_DISPLAY_ON_RAM_CMD,
         SSD1306_SET_NORMAL_DISPLAY_CMD,
-        SSD1306_CHARGE_PUMP_SETTING_CMD,
-        0x14U,
-        SSD1306_SET_DISPLAY_ON_CMD,
-        // SSD1306_DISPLAY_ON_FULL_CMD
+        SSD1306_SET_DISPLAY_ON_CMD
     };
 
     //Initialize buffer
     ssd1306_buffer.length = SSD1306_WIDTH * SSD1306_HEIGHT;
     memset(ssd1306_buffer.buffer, 0, ssd1306_buffer.length);
-
+    
     i2c_init(i2c_default, 400 * 1000);
     gpio_set_function(SSD1306_SDA_PIN, GPIO_FUNC_I2C);
     gpio_set_function(SSD1306_SCK_PIN, GPIO_FUNC_I2C);
     gpio_pull_up(SSD1306_SDA_PIN);
     gpio_pull_up(SSD1306_SCK_PIN);
-    for(uint8_t i=0; i<count_of(config_cmds);i++){
-        ssd1306_send_cmd(config_cmds[i]);
-    }
+    
+    i2c_write_blocking(i2c0, SSD1306_ADDR, &start_cmd, 1, true);
+    i2c_write_blocking(i2c0, SSD1306_ADDR, config_cmds, count_of(config_cmds), false);
+    // for(uint8_t i=0; i<count_of(config_cmds);i++){
+    //     ssd1306_send_cmd(config_cmds[i]);
+    // }
 }
 
 void ssd1306_draw(void)
