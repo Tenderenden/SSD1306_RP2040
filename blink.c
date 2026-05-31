@@ -31,15 +31,15 @@ int main() {
     ssd1306_init();
     ssd1306_set_horizontal_mode(0, 127, 0, 7);
     while (true) {
-        // ssd1306_send_cmd(SSD1306_DISPLAY_ON_FULL_CMD);
-        ssd1306_clear_buff();
-        ssd1306_draw();
+        ssd1306_send_cmd(SSD1306_DISPLAY_ON_FULL_CMD);
+        // ssd1306_clear_buff();
+        // ssd1306_draw();
         pico_set_led(true);
         sleep_ms(LED_DELAY_MS);
-        // ssd1306_send_cmd(SSD1306_DISPLAY_ON_RAM_CMD);
+        ssd1306_send_cmd(SSD1306_DISPLAY_ON_RAM_CMD);
         pico_set_led(false);
-        ssd1306_fill_buff();
-        ssd1306_draw();
+        // ssd1306_fill_buff();
+        // ssd1306_draw();
         sleep_ms(LED_DELAY_MS);
         printf("Loop done\n");
     }
