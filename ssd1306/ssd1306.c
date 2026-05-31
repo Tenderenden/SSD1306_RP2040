@@ -99,3 +99,12 @@ void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t pa
     cmds[3] = page_stop; //0 - 7
     i2c_write_blocking(i2c0, SSD1306_ADDR, cmds, 4, false);
 }
+
+void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column)
+{
+    uint8_t cmds[] = {0x80, page_start_address, lower_column, higher_column};
+    i2c_write_blocking(i2c0, SSD1306_ADDR, cmds, 4, false);
+    //Set page start address 0xB0 - 0xB7
+    //Set lower start column 0x00 - 0x0F
+    //Set upper start column 0x10 - 0x1F
+}

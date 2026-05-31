@@ -50,7 +50,10 @@ typedef struct ssd1306_buffer{
 void ssd1306_init(void);
 void ssd1306_draw(void);
 void ssd1306_send_cmd(uint8_t cmd);
+void ssd1306_send_data(ssd1306_buffer_t *buffer);
 void ssd1306_clear_buff(void);
 void ssd1306_fill_buff(void);
 void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
+void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column);
+
 #endif /* SSD1306_H */

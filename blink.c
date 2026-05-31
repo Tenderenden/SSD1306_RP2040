@@ -10,6 +10,7 @@
 #define LED_DELAY_MS 250
 #endif
 
+ssd1306_buffer_t test_buffer;
 // Perform initialisation
 int pico_led_init(void) {
     gpio_init(LED_PIN);
@@ -28,16 +29,22 @@ int main() {
     hard_assert(rc == PICO_OK);
     stdio_init_all();
     printf("Starting_program\n");
+    test_buffer.length = 1;
+    test_buffer.buffer[0] = 0x00;
     ssd1306_init();
-    ssd1306_set_horizontal_mode(0, 127, 0, 7);
+    // ssd1306_set_horizontal_mode(0, 127, 0, 7);
+    ssd1306_send_cmd(SSD1306_DISPLAY_ON_RAM_CMD);
+    ssd1306_set_page_mode(0xB2, 0x00, 0x10);
     while (true) {
-        ssd1306_send_cmd(SSD1306_DISPLAY_ON_FULL_CMD);
+        pico_set_led(true);
+        // ssd1306_send_cmd(SSD1306_DISPLAY_ON_FULL_CMD);
+        ssd1306_send_data(&test_buffer);
         // ssd1306_clear_buff();
         // ssd1306_draw();
-        pico_set_led(true);
         sleep_ms(LED_DELAY_MS);
-        ssd1306_send_cmd(SSD1306_DISPLAY_ON_RAM_CMD);
+        // ssd1306_send_cmd(SSD1306_DISPLAY_ON_RAM_CMD);
         pico_set_led(false);
+        ssd1306_send_data(&test_buffer);
         // ssd1306_fill_buff();
         // ssd1306_draw();
         sleep_ms(LED_DELAY_MS);
