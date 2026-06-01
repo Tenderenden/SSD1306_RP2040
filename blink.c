@@ -3,6 +3,7 @@
 #include "ssd1306/ssd1306.h"
 #include <pico/stdio.h>
 #include <stdio.h>
+#include <string.h>
 
 #define LED_PIN 3
 
@@ -29,14 +30,14 @@ int main() {
     hard_assert(rc == PICO_OK);
     stdio_init_all();
     printf("Starting_program\n");
-    test_buffer.length = 1;
-    test_buffer.buffer[0] = 0x00;
+    test_buffer.length = 10;
     ssd1306_init();
     // ssd1306_set_horizontal_mode(0, 127, 0, 7);
     ssd1306_send_cmd(SSD1306_DISPLAY_ON_RAM_CMD);
-    ssd1306_set_page_mode(0xB2, 0x00, 0x10);
     while (true) {
         pico_set_led(true);
+        memset(test_buffer.buffer, 0xFF, test_buffer.length);
+        ssd1306_set_page_mode(0xB0, 0x00, 0x1A);
         // ssd1306_send_cmd(SSD1306_DISPLAY_ON_FULL_CMD);
         ssd1306_send_data(&test_buffer);
         // ssd1306_clear_buff();
@@ -44,6 +45,8 @@ int main() {
         sleep_ms(LED_DELAY_MS);
         // ssd1306_send_cmd(SSD1306_DISPLAY_ON_RAM_CMD);
         pico_set_led(false);
+        memset(test_buffer.buffer, 0x00, test_buffer.length);
+        ssd1306_set_page_mode(0xB0, 0x00, 0x1A);
         ssd1306_send_data(&test_buffer);
         // ssd1306_fill_buff();
         // ssd1306_draw();
