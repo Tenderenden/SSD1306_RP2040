@@ -10,10 +10,14 @@
 #include "pico/stdlib.h"
 
 ssd1306_buffer_t ssd1306_buffer;
+ssd1306_cfg_t ssd1306_config = {
+    .address = SSD1306_ADDR,
+    .i2c_port = i2c0
+};
 
 void ssd1306_send_cmd(uint8_t cmd){
     uint8_t cmd_buffer[] = {0x80, cmd};
-    i2c_write_blocking(i2c0, SSD1306_ADDR, cmd_buffer, 2, false);
+    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmd_buffer, 2, false);
 }
 
 void ssd1306_send_data(ssd1306_buffer_t *buffer)
@@ -21,7 +25,7 @@ void ssd1306_send_data(ssd1306_buffer_t *buffer)
     uint8_t *data_buffer = malloc(buffer->length + 1);
     data_buffer[0] = 0x40;
     memcpy(data_buffer+1, buffer->buffer, buffer->length);
-    i2c_write_blocking(i2c0, SSD1306_ADDR, data_buffer, (buffer->length)+1, false);
+    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, data_buffer, (buffer->length)+1, false);
     free(data_buffer);
 }
 
@@ -54,7 +58,7 @@ void ssd1306_init() {
     ssd1306_buffer.length = SSD1306_WIDTH * SSD1306_HEIGHT;
     memset(ssd1306_buffer.buffer, 0, ssd1306_buffer.length);
 
-    i2c_init(i2c_default, 400 * 1000);
+    i2c_init(ssd1306_config.i2c_port, 400 * 1000);
     gpio_set_function(SSD1306_SDA_PIN, GPIO_FUNC_I2C);
     gpio_set_function(SSD1306_SCK_PIN, GPIO_FUNC_I2C);
     gpio_pull_up(SSD1306_SDA_PIN);
@@ -85,25 +89,25 @@ void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t pa
     
     // Set horizontal adressing mode
     cmds[1] = 0x20;
-    i2c_write_blocking(i2c0, SSD1306_ADDR, cmds, 2, false);
+    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmds, 2, false);
     
     // Set column address
     cmds[1] = 0x21;
     cmds[2] = col_start; //0 - 127
     cmds[3] = col_stop; //0 - 127
-    i2c_write_blocking(i2c0, SSD1306_ADDR, cmds, 4, false);
+    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmds, 4, false);
     
     // Set page address
     cmds[1] = 0x22;
     cmds[2] = page_start; //0 - 7
     cmds[3] = page_stop; //0 - 7
-    i2c_write_blocking(i2c0, SSD1306_ADDR, cmds, 4, false);
+    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmds, 4, false);
 }
 
 void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column)
 {
     uint8_t cmds[] = {0x80, page_start_address, lower_column, higher_column};
-    i2c_write_blocking(i2c0, SSD1306_ADDR, cmds, 4, false);
+    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmds, 4, false);
     //Set page start address 0xB0 - 0xB7
     //Set lower start column 0x00 - 0x0F
     //Set upper start column 0x10 - 0x1F
