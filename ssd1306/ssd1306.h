@@ -42,6 +42,7 @@
 
 #define SSD1306_CHARGE_PUMP_SETTING_CMD 0x8D
 
+
 typedef struct ssd1306_buffer{
     uint8_t buffer[SSD1306_WIDTH * SSD1306_HEIGHT];
     size_t length;

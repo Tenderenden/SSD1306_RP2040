@@ -15,9 +15,11 @@ ssd1306_cfg_t ssd1306_config = {
     .i2c_port = i2c0
 };
 
+void ssd1306_write_cmds(uint8_t *cmd_buffer, uint8_t buff_len);
+
 void ssd1306_send_cmd(uint8_t cmd){
     uint8_t cmd_buffer[] = {0x80, cmd};
-    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmd_buffer, 2, false);
+    ssd1306_write_cmds(cmd_buffer, 2);
 }
 
 void ssd1306_send_data(ssd1306_buffer_t *buffer)
@@ -25,9 +27,10 @@ void ssd1306_send_data(ssd1306_buffer_t *buffer)
     uint8_t *data_buffer = malloc(buffer->length + 1);
     data_buffer[0] = 0x40;
     memcpy(data_buffer+1, buffer->buffer, buffer->length);
-    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, data_buffer, (buffer->length)+1, false);
+    ssd1306_write_cmds(data_buffer, (buffer->length)+1);
     free(data_buffer);
 }
+
 
 void ssd1306_init() {
     printf("Initializing OLED\n");
@@ -51,7 +54,7 @@ void ssd1306_init() {
         SSD1306_CHARGE_PUMP_SETTING_CMD,
         0x14U,
         SSD1306_SET_DISPLAY_ON_CMD,
-        // SSD1306_DISPLAY_ON_FULL_CMD
+        SSD1306_DISPLAY_ON_FULL_CMD
     };
 
     //Initialize buffer
@@ -63,6 +66,7 @@ void ssd1306_init() {
     gpio_set_function(SSD1306_SCK_PIN, GPIO_FUNC_I2C);
     gpio_pull_up(SSD1306_SDA_PIN);
     gpio_pull_up(SSD1306_SCK_PIN);
+
     for(uint8_t i=0; i<count_of(config_cmds);i++){
         ssd1306_send_cmd(config_cmds[i]);
     }
@@ -89,26 +93,31 @@ void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t pa
     
     // Set horizontal adressing mode
     cmds[1] = 0x20;
-    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmds, 2, false);
+    ssd1306_write_cmds(cmds, 2);
     
     // Set column address
     cmds[1] = 0x21;
     cmds[2] = col_start; //0 - 127
     cmds[3] = col_stop; //0 - 127
-    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmds, 4, false);
+    ssd1306_write_cmds(cmds, 4);
     
     // Set page address
     cmds[1] = 0x22;
     cmds[2] = page_start; //0 - 7
     cmds[3] = page_stop; //0 - 7
-    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmds, 4, false);
+    ssd1306_write_cmds(cmds, 4);
 }
 
 void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column)
 {
     uint8_t cmds[] = {0x80, page_start_address, lower_column, higher_column};
-    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmds, 4, false);
+    ssd1306_write_cmds(cmds, 4);
     //Set page start address 0xB0 - 0xB7
     //Set lower start column 0x00 - 0x0F
     //Set upper start column 0x10 - 0x1F
+}
+
+void ssd1306_write_cmds(uint8_t *cmd_buffer, uint8_t buff_len)
+{
+    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmd_buffer, buff_len, false);
 }
