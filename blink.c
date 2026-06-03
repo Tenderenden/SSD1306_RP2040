@@ -12,14 +12,14 @@
 #endif
 
 ssd1306_buffer_t test_buffer;
-// Perform initialisation
+
+
 int pico_led_init(void) {
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
     return PICO_OK;
 }
 
-// Turn the led on or off
 void pico_set_led(bool led_on) {
     // Just set the GPIO on or off
     gpio_put(LED_PIN, led_on);
@@ -30,26 +30,22 @@ int main() {
     hard_assert(rc == PICO_OK);
     stdio_init_all();
     printf("Starting_program\n");
+
     test_buffer.length = 10;
     ssd1306_init();
-    // ssd1306_set_horizontal_mode(0, 127, 0, 7);
-    ssd1306_send_cmd(SSD1306_DISPLAY_ON_RAM_CMD);
+    
+    ssd1306_set_horizontal_mode(0, 4, 0, 2);
+
     while (true) {
         pico_set_led(true);
         memset(test_buffer.buffer, 0xFF, test_buffer.length);
-        ssd1306_set_page_mode(0xB0, 0x00, 0x1A);
-        // ssd1306_send_cmd(SSD1306_DISPLAY_ON_FULL_CMD);
+        // ssd1306_set_page_mode(0xB0, 0x00, 0x1A);
         ssd1306_send_data(&test_buffer);
-        // ssd1306_clear_buff();
-        // ssd1306_draw();
         sleep_ms(LED_DELAY_MS);
-        // ssd1306_send_cmd(SSD1306_DISPLAY_ON_RAM_CMD);
         pico_set_led(false);
         memset(test_buffer.buffer, 0x00, test_buffer.length);
-        ssd1306_set_page_mode(0xB0, 0x00, 0x1A);
+        // ssd1306_set_page_mode(0xB0, 0x00, 0x1A);
         ssd1306_send_data(&test_buffer);
-        // ssd1306_fill_buff();
-        // ssd1306_draw();
         sleep_ms(LED_DELAY_MS);
         printf("Loop done\n");
     }

@@ -54,7 +54,8 @@ void ssd1306_init() {
         SSD1306_CHARGE_PUMP_SETTING_CMD,
         0x14U,
         SSD1306_SET_DISPLAY_ON_CMD,
-        SSD1306_DISPLAY_ON_FULL_CMD
+        SSD1306_DISPLAY_ON_FULL_CMD,
+        SSD1306_DISPLAY_ON_RAM_CMD
     };
 
     //Initialize buffer
@@ -93,7 +94,8 @@ void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t pa
     
     // Set horizontal adressing mode
     cmds[1] = 0x20;
-    ssd1306_write_cmds(cmds, 2);
+    cmds[2] = 0x00;
+    ssd1306_write_cmds(cmds, 3);
     
     // Set column address
     cmds[1] = 0x21;
@@ -112,7 +114,7 @@ void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uin
 {
     uint8_t cmds[] = {0x80, page_start_address, lower_column, higher_column};
     ssd1306_write_cmds(cmds, 4);
-    //Set page start address 0xB0 - 0xB7
+    //Set page start address 0xB0 - 0xB7 max is B3, cause of smaller screen
     //Set lower start column 0x00 - 0x0F
     //Set upper start column 0x10 - 0x1F
 }
