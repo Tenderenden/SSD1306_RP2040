@@ -90,7 +90,7 @@ void ssd1306_fill_buff(void)
 
 void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
 {
-    uint8_t cmds[] = {0x80, 0x0, 0x0, 0x0};
+    uint8_t cmds[] = {0x00, 0x0, 0x0, 0x0};
     
     // Set horizontal adressing mode
     cmds[1] = 0x20;
@@ -112,7 +112,7 @@ void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t pa
 
 void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column)
 {
-    uint8_t cmds[] = {0x80, page_start_address, lower_column, higher_column};
+    uint8_t cmds[] = {0x00, page_start_address, lower_column, higher_column};
     ssd1306_write_cmds(cmds, 4);
     //Set page start address 0xB0 - 0xB7 max is B3, cause of smaller screen
     //Set lower start column 0x00 - 0x0F
