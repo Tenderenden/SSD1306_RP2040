@@ -9,7 +9,9 @@
 #include <string.h>
 #include "pico/stdlib.h"
 
-ssd1306_buffer_t ssd1306_buffer;
+ssd1306_buffer_t ssd1306_main_buffer = {
+    .length = SSD1306_WIDTH * 4,
+};
 ssd1306_cfg_t ssd1306_config = {
     .address = SSD1306_ADDR,
     .i2c_port = i2c0
@@ -59,8 +61,8 @@ void ssd1306_init() {
     };
 
     //Initialize buffer
-    ssd1306_buffer.length = SSD1306_WIDTH * SSD1306_HEIGHT;
-    memset(ssd1306_buffer.buffer, 0, ssd1306_buffer.length);
+    ssd1306_main_buffer.length = (128);
+    memset(ssd1306_main_buffer.buffer, 0, ssd1306_main_buffer.length);
 
     i2c_init(ssd1306_config.i2c_port, 400 * 1000);
     gpio_set_function(SSD1306_SDA_PIN, GPIO_FUNC_I2C);
@@ -75,17 +77,17 @@ void ssd1306_init() {
 
 void ssd1306_draw(void)
 {
-    ssd1306_send_data(&ssd1306_buffer);
+    ssd1306_send_data(&ssd1306_main_buffer);
 }
 
 void ssd1306_clear_buff(void)
 {
-    memset(ssd1306_buffer.buffer, 0, ssd1306_buffer.length);
+    memset(ssd1306_main_buffer.buffer, 0x00, ssd1306_main_buffer.length);
 }
 
 void ssd1306_fill_buff(void)
 {
-    memset(ssd1306_buffer.buffer, 0xFF, ssd1306_buffer.length);
+    memset(ssd1306_main_buffer.buffer, 0xFF, ssd1306_main_buffer.length);
 }
 
 void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
@@ -122,4 +124,13 @@ void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uin
 void ssd1306_write_cmds(uint8_t *cmd_buffer, uint8_t buff_len)
 {
     i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmd_buffer, buff_len, false);
+}
+
+void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
+{
+    uint8_t column =0, page=0, bit=0;
+    column = y;
+    page = x / 8;
+    bit = x % 8;
+    printf("Col: %d \nPage: %d\nBit: %d", column, page, bit);
 }

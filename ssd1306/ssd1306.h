@@ -2,6 +2,8 @@
 #define SSD1306_H
 
 #include "hardware/i2c.h"
+#include <pico/types.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #define SSD1306_ADDR 0x3CU
@@ -61,5 +63,6 @@ void ssd1306_clear_buff(void);
 void ssd1306_fill_buff(void);
 void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
 void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column);
+void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on);
 
 #endif /* SSD1306_H */
