@@ -17,7 +17,7 @@ ssd1306_cfg_t ssd1306_config = {
     .i2c_port = i2c0
 };
 
-void ssd1306_write_cmds(uint8_t *cmd_buffer, uint8_t buff_len);
+void ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len);
 
 void ssd1306_send_cmd(uint8_t cmd){
     uint8_t cmd_buffer[] = {0x80, cmd};
@@ -61,7 +61,7 @@ void ssd1306_init() {
     };
 
     //Initialize buffer
-    ssd1306_main_buffer.length = (128);
+    ssd1306_main_buffer.length = (SSD1306_WIDTH * SSD1306_HEIGHT) / 8;
     memset(ssd1306_main_buffer.buffer, 0, ssd1306_main_buffer.length);
 
     i2c_init(ssd1306_config.i2c_port, 400 * 1000);
@@ -121,7 +121,7 @@ void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uin
     //Set upper start column 0x10 - 0x1F
 }
 
-void ssd1306_write_cmds(uint8_t *cmd_buffer, uint8_t buff_len)
+void ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len)
 {
     i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmd_buffer, buff_len, false);
 }

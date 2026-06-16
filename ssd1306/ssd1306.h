@@ -46,7 +46,7 @@
 
 
 typedef struct ssd1306_buffer{
-    uint8_t buffer[SSD1306_WIDTH * SSD1306_HEIGHT];
+    uint8_t buffer[(SSD1306_WIDTH * SSD1306_HEIGHT)/8];
     size_t length;
 }ssd1306_buffer_t;
 
