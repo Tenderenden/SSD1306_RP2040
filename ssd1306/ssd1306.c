@@ -132,5 +132,11 @@ void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
     column = y;
     page = x / 8;
     bit = x % 8;
-    printf("Col: %d \nPage: %d\nBit: %d", column, page, bit);
+    if(pixel_on){
+        ssd1306_main_buffer.buffer[(128*y)+x] |= 1 << bit;
+    }
+    else {
+        ssd1306_main_buffer.buffer[(128*y)+x] &= ~(1<<bit);
+    }
+    // printf("Col: %d \nPage: %d\nBit: %d\n", column, page, bit);
 }
