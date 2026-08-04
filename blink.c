@@ -1,3 +1,4 @@
+// board documentation: https://www.waveshare.com/wiki/RP2040-Zero
 #include "pico/stdlib.h"
 #include "ssd1306.h"
 #include "ssd1306/ssd1306.h"
