@@ -128,15 +128,17 @@ void ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len)
 
 void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
 {
-    uint8_t column =0, page=0, bit=0;
-    column = y;
-    page = x / 8;
-    bit = x % 8;
-    if(pixel_on){
-        ssd1306_main_buffer.buffer[(128*y)+x] |= 1 << bit;
-    }
-    else {
-        ssd1306_main_buffer.buffer[(128*y)+x] &= ~(1<<bit);
+    if (x >= SSD1306_WIDTH || y >= SSD1306_HEIGHT) return;
+
+    uint8_t page = y / 8;
+    uint8_t bit = y % 8;
+    
+    uint16_t index = (page * SSD1306_WIDTH) + x;
+
+    if (pixel_on) {
+        ssd1306_main_buffer.buffer[index] |= (1 << bit);
+    } else {
+        ssd1306_main_buffer.buffer[index] &= ~(1 << bit);
     }
     // printf("Col: %d \nPage: %d\nBit: %d\n", column, page, bit);
 }
