@@ -1,6 +1,7 @@
 #include "ssd1306.h"
 #include <hardware/i2c.h>
 #include <pico/platform/compiler.h>
+#include <pico/types.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -134,4 +135,26 @@ void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
         ssd1306_main_buffer.buffer[index] &= ~(1 << bit);
     }
     // printf("Col: %d \nPage: %d\nBit: %d\n", column, page, bit);
+}
+
+void test_segments(uint8_t col_start, uint8_t col_count, uint8_t page_start, uint8_t page_count)
+{
+    ssd1306_buffer_t test_buffer;
+    test_buffer.buffer[0] = 0;
+    test_buffer.length = 1;
+
+    //Check column mapping
+    for(uint8_t i=col_start; i<col_start+col_count;i++)
+    {
+        for(uint8_t x=0; x<8; x++)
+        {
+            printf("column: %d, page: %d, value: %d\n", i, page_start, x);
+            ssd1306_set_horizontal_mode(i, i+1, page_start, page_start+1);
+            test_buffer.buffer[0] = (1 << x);
+            ssd1306_send_data(&test_buffer);
+            sleep_ms(400);
+        }
+    }
+    
+    //Check page mapping
 }
