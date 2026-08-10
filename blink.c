@@ -33,25 +33,9 @@ void pico_set_led(bool led_on) {
     gpio_put(LED_PIN, led_on);
 }
 
-void decode_pixel_cmd(char *buffer, uint8_t *x, uint8_t *y)
-{
-    uint8_t index=0;
-    //Get x
-    while(buffer[index]!= ' '){
-        *x = (*x*10) + (uint8_t)(buffer[index] - '0');
-        index++;
-    }
-    index++;
-    //Get y
-    while((' ' != buffer[index]) && ('\0' != buffer[index]) && ('\n' != buffer[index])){
-        *y = (*y*10) + (uint8_t)(buffer[index] - '0');
-        index++;
-    }
-}
-
 void get_input(void)
 {
-    uint8_t x=0, y=0;
+    int x=0, y=0, is_on=0;
     static uint8_t index = 0;
     while(uart_is_readable(uart0)){
         input_buffer[index++] = uart_getc(uart0);
@@ -61,13 +45,13 @@ void get_input(void)
         // printf("input_buffer:__%10s__\n", input_buffer);
         switch (input_buffer[0]) {
             case 'p':
-                decode_pixel_cmd(input_buffer+2, &x, &y);
-                printf("pixel x:%d, y:%d\n", x, y);
+                sscanf(input_buffer+2, "%d %d %d", &x, &y, &is_on);
+                printf("PXL (%d,%d) state: %d\n", x, y, is_on);
+                ssd1306_set_pixel(x, y, is_on);
                 break;
             default:
                 printf("UNN CMD: %c\n", input_buffer[0]);
                 break;
-        
         }
     }
     index = 0;
@@ -88,15 +72,17 @@ int main() {
         get_input();
         pico_set_led(true);
         ssd1306_set_horizontal_mode(0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
-        ssd1306_set_pixel(127, 0, true);
+        // ssd1306_fill_buff();
+        // ssd1306_set_pixel(127, 0, true);
         ssd1306_draw();
         sleep_ms(LED_DELAY_MS);
         
         pico_set_led(false);
         ssd1306_set_horizontal_mode(0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
-        ssd1306_set_pixel(127, 0, false);
+        // ssd1306_clear_buff();
+        // ssd1306_set_pixel(127, 0, false);
         ssd1306_draw();
         sleep_ms(LED_DELAY_MS);
-        printf("Loop %d done\n", loop_counter++);
+        // printf("Loop %d done\n", loop_counter++);
     }
 }
