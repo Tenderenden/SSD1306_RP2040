@@ -55,6 +55,8 @@ typedef struct ssd1306_cfg{
     i2c_inst_t *i2c_port;
 }ssd1306_cfg_t;
 
+void test_segments(uint8_t col_start, uint8_t col_count, uint8_t page_start, uint8_t page_count);
+
 void ssd1306_init(void);
 void ssd1306_draw(void);
 void ssd1306_send_cmd(uint8_t cmd);
