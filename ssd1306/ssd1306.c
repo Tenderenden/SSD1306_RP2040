@@ -17,22 +17,6 @@ ssd1306_cfg_t ssd1306_config = {
     .i2c_port = i2c0
 };
 
-void ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len);
-
-void ssd1306_send_cmd(uint8_t cmd){
-    uint8_t cmd_buffer[] = {0x80, cmd};
-    ssd1306_write_cmds(cmd_buffer, 2);
-}
-
-void ssd1306_send_data(ssd1306_buffer_t *buffer)
-{
-    uint8_t *data_buffer = malloc(buffer->length + 1);
-    data_buffer[0] = 0x40;
-    memcpy(data_buffer+1, buffer->buffer, buffer->length);
-    ssd1306_write_cmds(data_buffer, (buffer->length)+1);
-    free(data_buffer);
-}
-
 
 void ssd1306_init() {
     printf("Initializing OLED\n");
@@ -75,19 +59,28 @@ void ssd1306_init() {
     }
 }
 
+void ssd1306_send_cmd(uint8_t cmd){
+    uint8_t cmd_buffer[] = {0x80, cmd};
+    ssd1306_write_cmds(cmd_buffer, 2);
+}
+
+void ssd1306_send_data(ssd1306_buffer_t *buffer)
+{
+    uint8_t *data_buffer = malloc(buffer->length + 1);
+    data_buffer[0] = 0x40;
+    memcpy(data_buffer+1, buffer->buffer, buffer->length);
+    ssd1306_write_cmds(data_buffer, (buffer->length)+1);
+    free(data_buffer);
+}
+
 void ssd1306_draw(void)
 {
     ssd1306_send_data(&ssd1306_main_buffer);
 }
 
-void ssd1306_clear_buff(void)
+void ssd1306_fill_buff(uint8_t val)
 {
-    memset(ssd1306_main_buffer.buffer, 0x00, ssd1306_main_buffer.length);
-}
-
-void ssd1306_fill_buff(void)
-{
-    memset(ssd1306_main_buffer.buffer, 0xFF, ssd1306_main_buffer.length);
+    memset(ssd1306_main_buffer.buffer, val, ssd1306_main_buffer.length);
 }
 
 void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
