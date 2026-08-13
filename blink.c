@@ -68,6 +68,9 @@ int main() {
     printf("Starting_program\n");
 
     ssd1306_init();
+    ssd1306_fill_buff(0x0);
+    ssd1306_draw();
+    printf("Main loop start\n");
     while (true) {
         get_input();
         ssd1306_draw();
