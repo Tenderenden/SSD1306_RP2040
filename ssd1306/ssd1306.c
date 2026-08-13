@@ -45,7 +45,7 @@ void ssd1306_init() {
         SSD1306_DISPLAY_ON_RAM_CMD
     };
 
-    //Initialize buffer
+    //Initialize buffer for full screen
     ssd1306_main_buffer.length = (SSD1306_WIDTH * SSD1306_HEIGHT) / 8;
     memset(ssd1306_main_buffer.buffer, 0, ssd1306_main_buffer.length);
 
@@ -56,13 +56,16 @@ void ssd1306_init() {
     gpio_pull_up(SSD1306_SCK_PIN);
 
     for(uint8_t i=0; i<count_of(config_cmds);i++){
-        ssd1306_send_cmd(config_cmds[i]);
+        ssd1306_send_one_cmd(config_cmds[i]);
     }
+
+    //Set horizontal mode for full screen
+    ssd1306_set_horizontal_mode(0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
 }
 
-void ssd1306_send_cmd(uint8_t cmd){
+void ssd1306_send_one_cmd(uint8_t cmd){
     uint8_t cmd_buffer[] = {0x80, cmd};
-    ssd1306_write_cmds(cmd_buffer, 2);
+    ssd1306_write_cmds(cmd_buffer, 2, false);
 }
 
 void ssd1306_send_data(ssd1306_buffer_t *buffer)
@@ -70,7 +73,7 @@ void ssd1306_send_data(ssd1306_buffer_t *buffer)
     uint8_t *data_buffer = malloc(buffer->length + 1);
     data_buffer[0] = 0x40;
     memcpy(data_buffer+1, buffer->buffer, buffer->length);
-    ssd1306_write_cmds(data_buffer, (buffer->length)+1);
+    ssd1306_write_cmds(data_buffer, (buffer->length)+1, false);
     free(data_buffer);
 }
 
@@ -91,33 +94,33 @@ void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t pa
     // Set horizontal adressing mode
     cmds[1] = 0x20;
     cmds[2] = 0x00;
-    ssd1306_write_cmds(cmds, 3);
+    ssd1306_write_cmds(cmds, 3, false);
     
     // Set column address
     cmds[1] = 0x21;
     cmds[2] = col_start; //0 - 127
     cmds[3] = col_stop; //0 - 127
-    ssd1306_write_cmds(cmds, 4);
+    ssd1306_write_cmds(cmds, 4, false);
     
     // Set page address
     cmds[1] = 0x22;
     cmds[2] = page_start; //0 - 7
     cmds[3] = page_stop; //0 - 7
-    ssd1306_write_cmds(cmds, 4);
+    ssd1306_write_cmds(cmds, 4, false);
 }
 
 void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column)
 {
     uint8_t cmds[] = {0x00, page_start_address, lower_column, higher_column};
-    ssd1306_write_cmds(cmds, 4);
+    ssd1306_write_cmds(cmds, 4, false);
     //Set page start address 0xB0 - 0xB7 max is B3, cause of smaller screen
     //Set lower start column 0x00 - 0x0F
     //Set upper start column 0x10 - 0x1F
 }
 
-void ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len)
+void ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len, bool nostop)
 {
-    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmd_buffer, buff_len, false);
+    i2c_write_blocking(ssd1306_config.i2c_port, ssd1306_config.address, cmd_buffer, buff_len, nostop);
 }
 
 void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
