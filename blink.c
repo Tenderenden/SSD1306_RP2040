@@ -70,18 +70,10 @@ int main() {
     ssd1306_init();
     while (true) {
         get_input();
+        ssd1306_draw();
         pico_set_led(true);
-        ssd1306_set_horizontal_mode(0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
-        // ssd1306_fill_buff();
-        // ssd1306_set_pixel(127, 0, true);
-        ssd1306_draw();
         sleep_ms(LED_DELAY_MS);
-        
         pico_set_led(false);
-        ssd1306_set_horizontal_mode(0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
-        // ssd1306_clear_buff();
-        // ssd1306_set_pixel(127, 0, false);
-        ssd1306_draw();
         sleep_ms(LED_DELAY_MS);
         // printf("Loop %d done\n", loop_counter++);
     }

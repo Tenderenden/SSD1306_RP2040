@@ -59,9 +59,9 @@ void test_segments(uint8_t col_start, uint8_t col_count, uint8_t page_start, uin
 
 void ssd1306_init(void);
 void ssd1306_draw(void);
-void ssd1306_send_cmd(uint8_t cmd);
+void ssd1306_send_one_cmd(uint8_t cmd);
 void ssd1306_send_data(ssd1306_buffer_t *buffer);
-void ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len);
+void ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len, bool nostop);
 void ssd1306_clear_buff(void);
 void ssd1306_fill_buff(uint8_t val);
 void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
