@@ -18,10 +18,7 @@ ssd1306_cfg_t ssd1306_config = {
     .i2c_port = i2c0
 };
 
-
-void ssd1306_init() {
-    printf("Initializing OLED\n");
-    uint8_t config_cmds[]={
+uint8_t ssd1306_config_cmds[] = {
         SSD1306_SET_DISPLAY_OFF_CMD,
         SSD1306_SET_DISPLAY_CLK_DIVIDE_FREQ_CMD,
         ((8<<4)|0),
@@ -45,9 +42,15 @@ void ssd1306_init() {
         SSD1306_DISPLAY_ON_RAM_CMD
     };
 
+
+void ssd1306_init() {
+    printf("Initializing OLED\n");
+
     //Initialize buffer for full screen
-    ssd1306_main_buffer.length = (SSD1306_WIDTH * SSD1306_HEIGHT) / 8;
-    memset(ssd1306_main_buffer.buffer, 0, ssd1306_main_buffer.length);
+    ssd1306_main_buffer.length = SSD1306_WIDTH * SSD1306_HEIGHT / 8;
+    memset(ssd1306_main_buffer.buffer+1, 0, ssd1306_main_buffer.length);
+    //Add control byte to the first place in buffer
+    ssd1306_main_buffer.buffer[0] = 0x40;
 
     i2c_init(ssd1306_config.i2c_port, 400 * 1000);
     gpio_set_function(SSD1306_SDA_PIN, GPIO_FUNC_I2C);
@@ -55,8 +58,8 @@ void ssd1306_init() {
     gpio_pull_up(SSD1306_SDA_PIN);
     gpio_pull_up(SSD1306_SCK_PIN);
 
-    for(uint8_t i=0; i<count_of(config_cmds);i++){
-        ssd1306_send_one_cmd(config_cmds[i]);
+    for(uint8_t i=0; i<count_of(ssd1306_config_cmds);i++){
+        ssd1306_send_one_cmd(ssd1306_config_cmds[i]);
     }
 
     //Set horizontal mode for full screen
@@ -70,11 +73,7 @@ void ssd1306_send_one_cmd(uint8_t cmd){
 
 void ssd1306_send_data(ssd1306_buffer_t *buffer)
 {
-    uint8_t *data_buffer = malloc(buffer->length + 1);
-    data_buffer[0] = 0x40;
-    memcpy(data_buffer+1, buffer->buffer, buffer->length);
-    ssd1306_write_cmds(data_buffer, (buffer->length)+1, false);
-    free(data_buffer);
+    ssd1306_write_cmds(buffer->buffer, (buffer->length)+1, false);
 }
 
 void ssd1306_draw(void)
@@ -84,7 +83,7 @@ void ssd1306_draw(void)
 
 void ssd1306_fill_buff(uint8_t val)
 {
-    memset(ssd1306_main_buffer.buffer, val, ssd1306_main_buffer.length);
+    memset(ssd1306_main_buffer.buffer+1, val, ssd1306_main_buffer.length);
 }
 
 void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
@@ -130,7 +129,7 @@ void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
     uint8_t page = y / 8;
     uint8_t bit = y % 8;
     
-    uint16_t index = (page * SSD1306_WIDTH) + x;
+    uint16_t index = 1 + (page * SSD1306_WIDTH) + x;
 
     if (pixel_on) {
         ssd1306_main_buffer.buffer[index] |= (1 << bit);
