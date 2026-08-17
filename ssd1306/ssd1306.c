@@ -139,6 +139,15 @@ void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
     // printf("Col: %d \nPage: %d\nBit: %d\n", column, page, bit);
 }
 
+bool ssd1306_get_pixel(uint8_t x, uint8_t y)
+{
+    bool ret_val;
+    uint8_t page = y / 8;
+    uint16_t index = 1 + (page * SSD1306_WIDTH) + x;
+    ret_val = (bool)((ssd1306_main_buffer.buffer[index]) & (1 << (y % 8)));
+    return ret_val;
+}
+
 void test_segments(uint8_t col_start, uint8_t col_count, uint8_t page_start, uint8_t page_count)
 {
     ssd1306_buffer_t test_buffer;
