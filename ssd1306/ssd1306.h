@@ -68,5 +68,6 @@ void ssd1306_fill_buff(uint8_t val);
 void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
 void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column);
 void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on);
+bool ssd1306_get_pixel(uint8_t x, uint8_t y);
 
 #endif /* SSD1306_H */
