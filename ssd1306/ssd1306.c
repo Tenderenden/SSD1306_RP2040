@@ -10,9 +10,8 @@
 #include <string.h>
 #include "pico/stdlib.h"
 
-ssd1306_buffer_t ssd1306_main_buffer = {
-    .length = SSD1306_WIDTH * 4,
-};
+ssd1306_buffer_t ssd1306_main_buffer;
+
 ssd1306_cfg_t ssd1306_config = {
     .address = SSD1306_ADDR,
     .i2c_port = i2c0
@@ -21,22 +20,22 @@ ssd1306_cfg_t ssd1306_config = {
 uint8_t ssd1306_config_cmds[] = {
         SSD1306_SET_DISPLAY_OFF_CMD,
         SSD1306_SET_DISPLAY_CLK_DIVIDE_FREQ_CMD,
-        ((8<<4)|0),
+        SSD1306_CLK_FREQ_VAL,
         SSD1306_SET_MULTIPLEX_RATIO_CMD,
         SSD1306_MUX_RATIO_32,
         SSD1306_SET_DISPLAY_OFFSET_CMD,
-        0x0U,
+        SSD1306_DISP_OFFSET_VAL,
         SSD1306_SET_DISPLAY_START_LINE_CMD,
         SSD1306_SET_SEGMENT_REMAP_NORMAL_CMD,
         SSD1306_SET_COM_SCAN_DIR_NORMAL_CMD,
         SSD1306_SET_COM_HW_CONFIG_CMD,
-        0x02U,
+        SSD1306_HW_CONFIG_VAL,
         SSD1306_SET_CONTRAST_CMD,
-        0x7F,
+        SSD1306_CONTRAST_VAL,
         SSD1306_DISPLAY_ON_RAM_CMD,
         SSD1306_SET_NORMAL_DISPLAY_CMD,
         SSD1306_CHARGE_PUMP_SETTING_CMD,
-        0x14U,
+        SSD1306_CHARGE_PUMP_VAL,
         SSD1306_SET_DISPLAY_ON_CMD,
         SSD1306_DISPLAY_ON_FULL_CMD,
         SSD1306_DISPLAY_ON_RAM_CMD
@@ -63,7 +62,7 @@ void ssd1306_init() {
     }
 
     //Set horizontal mode for full screen
-    ssd1306_set_horizontal_mode(0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
+    ssd1306_set_mem_addr_mode(ADDR_MODE_HORIZONTAL, 0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
 }
 
 void ssd1306_send_one_cmd(uint8_t cmd){
@@ -86,23 +85,23 @@ void ssd1306_fill_buff(uint8_t val)
     memset(ssd1306_main_buffer.buffer+1, val, ssd1306_main_buffer.length);
 }
 
-void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
+void ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
 {
     uint8_t cmds[] = {0x00, 0x0, 0x0, 0x0};
     
     // Set horizontal adressing mode
-    cmds[1] = 0x20;
-    cmds[2] = 0x00;
+    cmds[1] = SSD1306_ADDRSET_MEMORY_ADDRESSING_MODE_CMD;
+    cmds[2] = mode;
     ssd1306_write_cmds(cmds, 3, false);
     
     // Set column address
-    cmds[1] = 0x21;
+    cmds[1] = SSD1306_SET_COLUMN_ADDRESS_CMD;
     cmds[2] = col_start; //0 - 127
     cmds[3] = col_stop; //0 - 127
     ssd1306_write_cmds(cmds, 4, false);
     
     // Set page address
-    cmds[1] = 0x22;
+    cmds[1] = SSD1306_SET_PAGE_ADDRESS_CMD;
     cmds[2] = page_start; //0 - 7
     cmds[3] = page_stop; //0 - 7
     ssd1306_write_cmds(cmds, 4, false);
@@ -160,7 +159,7 @@ void test_segments(uint8_t col_start, uint8_t col_count, uint8_t page_start, uin
         for(uint8_t x=0; x<8; x++)
         {
             printf("column: %d, page: %d, value: %d\n", i, page_start, x);
-            ssd1306_set_horizontal_mode(i, i+1, page_start, page_start+1);
+            ssd1306_set_mem_addr_mode(ADDR_MODE_HORIZONTAL, i, i+1, page_start, page_start+1);
             test_buffer.buffer[0] = (1 << x);
             ssd1306_send_data(&test_buffer);
             sleep_ms(400);

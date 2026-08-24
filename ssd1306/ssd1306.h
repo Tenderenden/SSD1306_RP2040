@@ -40,11 +40,21 @@
 #define SSD1306_SET_COM_SCAN_DIR_REMAPPED_CMD 0xC8U
 #define SSD1306_SET_DISPLAY_OFFSET_CMD 0xD3U
 #define SSD1306_SET_COM_HW_CONFIG_CMD 0xDAU
+
 #define SSD1306_SET_DISPLAY_CLK_DIVIDE_FREQ_CMD 0xD5U
+
 
 #define SSD1306_CHARGE_PUMP_SETTING_CMD 0x8D
 
+#define SSD1306_CLK_FREQ_VAL ((8<<4)|0)
+#define SSD1306_DISP_OFFSET_VAL (0x0U)
+#define SSD1306_HW_CONFIG_VAL (0x02U)
+#define SSD1306_CONTRAST_VAL (0x7FU)
+#define SSD1306_CHARGE_PUMP_VAL (0x14U)
+
+
 #define SSD1306_DATA_BUF_SIZE ((SSD1306_WIDTH * SSD1306_HEIGHT / 8)+1)
+
 
 typedef struct ssd1306_buffer{
     uint8_t buffer[SSD1306_DATA_BUF_SIZE];
@@ -56,6 +66,19 @@ typedef struct ssd1306_cfg{
     i2c_inst_t *i2c_port;
 }ssd1306_cfg_t;
 
+typedef struct ssd1306_type {
+    ssd1306_cfg_t config;
+    ssd1306_buffer_t buffer;
+} ssd1306_t;
+
+typedef enum 
+{
+    ADDR_MODE_HORIZONTAL= 0b00,
+    ADDR_MODE_VERTICAL = 0b01,
+    ADDR_MODE_PAGE = 0b10,
+    ADDR_MODE_ERR = 0b11,
+}ssd1306_addr_mode_t;
+
 void test_segments(uint8_t col_start, uint8_t col_count, uint8_t page_start, uint8_t page_count);
 
 void ssd1306_init(void);
@@ -65,7 +88,7 @@ void ssd1306_send_data(ssd1306_buffer_t *buffer);
 void ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len, bool nostop);
 void ssd1306_clear_buff(void);
 void ssd1306_fill_buff(uint8_t val);
-void ssd1306_set_horizontal_mode(uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
+void ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
 void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column);
 void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on);
 bool ssd1306_get_pixel(uint8_t x, uint8_t y);
