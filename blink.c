@@ -49,6 +49,11 @@ void get_input(void)
                 printf("PXL (%d,%d) state: %d\n", x, y, is_on);
                 ssd1306_set_pixel(x, y, is_on);
                 break;
+            case 'g':
+                sscanf(input_buffer+2, "%d %d", &x, &y);
+                is_on = ssd1306_get_pixel(x, y);
+                printf("(%d, %d) has state:%d\n", x, y, is_on);
+                break;
             default:
                 printf("UNN CMD: %c\n", input_buffer[0]);
                 break;
