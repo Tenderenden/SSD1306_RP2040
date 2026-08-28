@@ -64,12 +64,20 @@ typedef struct ssd1306_buffer{
 typedef struct ssd1306_cfg{
     uint32_t address;
     i2c_inst_t *i2c_port;
+    uint baud;
+    uint sda_pin;
+    uint sck_pin;
 }ssd1306_cfg_t;
 
 typedef struct ssd1306_type {
     ssd1306_cfg_t config;
     ssd1306_buffer_t buffer;
 } ssd1306_t;
+
+typedef struct ssd1306_test_type {
+    ssd1306_cfg_t* config;
+    ssd1306_buffer_t* buffer;
+}ssd1306_test_t;
 
 typedef enum 
 {
@@ -81,16 +89,16 @@ typedef enum
 
 void test_segments(uint8_t col_start, uint8_t col_count, uint8_t page_start, uint8_t page_count);
 
-void ssd1306_init(void);
-void ssd1306_draw(void);
-void ssd1306_send_one_cmd(uint8_t cmd);
-void ssd1306_send_data(ssd1306_buffer_t *buffer);
-void ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len, bool nostop);
-void ssd1306_clear_buff(void);
-void ssd1306_fill_buff(uint8_t val);
-void ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
-void ssd1306_set_page_mode(uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column);
-void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on);
-bool ssd1306_get_pixel(uint8_t x, uint8_t y);
+void ssd1306_init(ssd1306_t* scrn);
+void ssd1306_draw(ssd1306_t* scrn);
+void ssd1306_send_one_cmd(ssd1306_t* scrn, uint8_t cmd);
+void ssd1306_send_data(ssd1306_t* scrn, ssd1306_buffer_t *buffer);
+void ssd1306_write_cmds(ssd1306_cfg_t* cfg, uint8_t *cmd_buffer, size_t buff_len, bool nostop);
+void ssd1306_clear_buff(ssd1306_t* scrn);
+void ssd1306_fill_buff(ssd1306_t* scrn, uint8_t val);
+void ssd1306_set_mem_addr_mode(ssd1306_t* scrn, ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
+void ssd1306_set_page_mode(ssd1306_t* scrn, uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column);
+void ssd1306_set_pixel(ssd1306_t* scrn, uint8_t x, uint8_t y, bool pixel_on);
+bool ssd1306_get_pixel(ssd1306_t* scrn, uint8_t x, uint8_t y);
 
 #endif /* SSD1306_H */
