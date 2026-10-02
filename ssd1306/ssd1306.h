@@ -100,5 +100,8 @@ void ssd1306_set_mem_addr_mode(ssd1306_t* scrn, ssd1306_addr_mode_t mode, uint8_
 void ssd1306_set_page_mode(ssd1306_t* scrn, uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column);
 void ssd1306_set_pixel(ssd1306_t* scrn, uint8_t x, uint8_t y, bool pixel_on);
 bool ssd1306_get_pixel(ssd1306_t* scrn, uint8_t x, uint8_t y);
+void ssd1306_line(ssd1306_t *scrn, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
+void ssd1306_h_line(ssd1306_t *scrn, uint8_t x, uint8_t y, uint8_t length);
+void ssd1306_v_line(ssd1306_t *scrn, uint8_t x, uint8_t y, uint8_t length);
 
 #endif /* SSD1306_H */

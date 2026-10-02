@@ -141,6 +141,41 @@ bool ssd1306_get_pixel(ssd1306_t* scrn, uint8_t x, uint8_t y)
     return ret_val;
 }
 
+void ssd1306_line(ssd1306_t *scrn, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
+{
+    /* source: https://zingl.github.io/bresenham.html */
+    int dx = abs((int)x1-(int)x0);
+    int sx = (x0<x1) ? 1: -1;
+    int dy = -abs((int)y1-(int)y0);
+    int sy = (y0<y1) ? 1: -1;
+    int err = dx + dy;
+    int e2;
+
+    while (true) {
+        ssd1306_set_pixel(scrn, x0, y0, true);
+        if(x0 == x1 && y0 == y1) break;
+        e2 = 2 * err;
+        if (e2 >= dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
+        if (e2 <= dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
+    }
+}
+
+void ssd1306_h_line(ssd1306_t *scrn, uint8_t x, uint8_t y, uint8_t length)
+{
+    for(uint8_t i=x; i<(x+length); i++)
+    {
+        ssd1306_set_pixel(scrn, i, y, true);
+    }
+}
+
+void ssd1306_v_line(ssd1306_t *scrn, uint8_t x, uint8_t y, uint8_t length)
+{
+    for(uint8_t i=y; i<(y+length); i++)
+    {
+        ssd1306_set_pixel(scrn, x, i, true);
+    }
+}
+
 void test_segments(uint8_t col_start, uint8_t col_count, uint8_t page_start, uint8_t page_count)
 {
     ssd1306_t test_screen;
