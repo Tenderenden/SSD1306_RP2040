@@ -8,9 +8,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/_intsup.h>
 #include "pico/stdlib.h"
 
-uint8_t ssd1306_config_cmds[] = {
+static const uint8_t ssd1306_cfg_cmds[] = {
         SSD1306_SET_DISPLAY_OFF_CMD,
         SSD1306_SET_DISPLAY_CLK_DIVIDE_FREQ_CMD,
         SSD1306_CLK_FREQ_VAL,
@@ -34,44 +35,65 @@ uint8_t ssd1306_config_cmds[] = {
         SSD1306_DISPLAY_ON_RAM_CMD
     };
 
+static ssd1306_t main_screen = 
+{
+    .config = {
+        .address = SSD1306_ADDR,
+        .i2c_port = i2c0,
+        .baud = 400 * 1000,
+        .sda_pin = SSD1306_SDA_PIN,
+        .sck_pin = SSD1306_SCK_PIN,
+    }
+};
 
-void ssd1306_init(ssd1306_t* scrn) {
+
+uint ssd1306_init(ssd1306_t* scrn) {
+    uint ret_val = SSD1306_UNINIT_VAL;
     printf("Initializing OLED\n");
-
     //Initialize buffer for full screen
-    
     scrn->buffer.length = SSD1306_WIDTH * SSD1306_HEIGHT / 8;
     memset(scrn->buffer.buffer + 1, 0, scrn->buffer.length);
     //Add control byte to the first place in buffer
     scrn->buffer.buffer[0] = 0x40;
 
+    //None of official examples check i2c_init return value for errors
     i2c_init(scrn->config.i2c_port, scrn->config.baud);
     gpio_set_function(scrn->config.sda_pin, GPIO_FUNC_I2C);
     gpio_set_function(scrn->config.sck_pin, GPIO_FUNC_I2C);
     gpio_pull_up(scrn->config.sda_pin);
     gpio_pull_up(scrn->config.sck_pin);
 
-    for(uint8_t i=0; i<count_of(ssd1306_config_cmds);i++){
-        ssd1306_send_one_cmd(scrn, ssd1306_config_cmds[i]);
+    for(uint8_t i=0; i<count_of(ssd1306_cfg_cmds);i++){
+        ret_val = ssd1306_send_one_cmd(scrn, ssd1306_cfg_cmds[i]);
+        if (SSD1306_NO_ERR != ret_val){
+            return ret_val;
+        }
     }
 
     //Set horizontal mode for full screen
-    ssd1306_set_mem_addr_mode(scrn, ADDR_MODE_HORIZONTAL, 0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
+    ret_val = ssd1306_set_mem_addr_mode(scrn, ADDR_MODE_HORIZONTAL, 0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
+    return ret_val;
 }
 
-void ssd1306_send_one_cmd(ssd1306_t* scrn, uint8_t cmd){
+static uint ssd1306_send_one_cmd(ssd1306_t* scrn, uint8_t cmd){
     uint8_t cmd_buffer[] = {0x80, cmd};
-    ssd1306_write_cmds(&(scrn->config), cmd_buffer, 2, false);
+    uint ret_val = SSD1306_UNINIT_VAL;
+    ret_val = ssd1306_write_cmds(&(scrn->config), cmd_buffer, 2, false);
+    return ret_val;
 }
 
-void ssd1306_send_data(ssd1306_t* scrn, ssd1306_buffer_t *buffer)
+static uint ssd1306_send_data(ssd1306_t* scrn, ssd1306_buffer_t *buffer)
 {
-    ssd1306_write_cmds(&(scrn->config), buffer->buffer, (buffer->length)+1, false);
+    uint ret_val = SSD1306_UNINIT_VAL;
+    ret_val = ssd1306_write_cmds(&(scrn->config), buffer->buffer, (buffer->length)+1, false);
+    return ret_val;
 }
 
-void ssd1306_draw(ssd1306_t* scrn)
+uint ssd1306_draw(ssd1306_t* scrn)
 {
-    ssd1306_send_data(scrn, &scrn->buffer);
+    uint ret_val = SSD1306_UNINIT_VAL;
+    ret_val = ssd1306_send_data(scrn, &scrn->buffer);
+    return ret_val;
 }
 
 void ssd1306_fill_buff(ssd1306_t* scrn, uint8_t val)
@@ -79,40 +101,48 @@ void ssd1306_fill_buff(ssd1306_t* scrn, uint8_t val)
     memset(scrn->buffer.buffer+1, val, scrn->buffer.length);
 }
 
-void ssd1306_set_mem_addr_mode(ssd1306_t* scrn, ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
+static uint ssd1306_set_mem_addr_mode(ssd1306_t* scrn, ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
 {
+    //TODO: Send those commands in one go instead of dividing it like this
+    uint ret_val = SSD1306_UNINIT_VAL;
     uint8_t cmds[] = {0x00, 0x0, 0x0, 0x0};
-    
     // Set horizontal adressing mode
     cmds[1] = SSD1306_ADDRSET_MEMORY_ADDRESSING_MODE_CMD;
     cmds[2] = mode;
-    ssd1306_write_cmds(&(scrn->config), cmds, 3, false);
-    
+    ret_val = ssd1306_write_cmds(&(scrn->config), cmds, 3, false);
+    if (SSD1306_NO_ERR != ret_val){
+        return ret_val;
+    }
+
     // Set column address
     cmds[1] = SSD1306_SET_COLUMN_ADDRESS_CMD;
     cmds[2] = col_start; //0 - 127
     cmds[3] = col_stop; //0 - 127
-    ssd1306_write_cmds(&(scrn->config), cmds, 4, false);
-    
+    ret_val = ssd1306_write_cmds(&(scrn->config), cmds, 4, false);
+    if (SSD1306_NO_ERR != ret_val){
+        return ret_val;
+    }
+
     // Set page address
     cmds[1] = SSD1306_SET_PAGE_ADDRESS_CMD;
     cmds[2] = page_start; //0 - 7
     cmds[3] = page_stop; //0 - 7
-    ssd1306_write_cmds(&(scrn->config), cmds, 4, false);
+    ret_val = ssd1306_write_cmds(&(scrn->config), cmds, 4, false);
+    if (SSD1306_NO_ERR != ret_val){
+        return ret_val;
+    }
+    return SSD1306_NO_ERR;
 }
 
-void ssd1306_set_page_mode(ssd1306_t* scrn, uint8_t page_start_address, uint8_t lower_column, uint8_t higher_column)
+static uint ssd1306_write_cmds(ssd1306_cfg_t* cfg, uint8_t *cmd_buffer, size_t buff_len, bool nostop)
 {
-    uint8_t cmds[] = {0x00, page_start_address, lower_column, higher_column};
-    ssd1306_write_cmds(&(scrn->config), cmds, 4, false);
-    //Set page start address 0xB0 - 0xB7 max is B3, cause of smaller screen
-    //Set lower start column 0x00 - 0x0F
-    //Set upper start column 0x10 - 0x1F
-}
-
-void ssd1306_write_cmds(ssd1306_cfg_t* cfg, uint8_t *cmd_buffer, size_t buff_len, bool nostop)
-{
-    i2c_write_blocking(cfg->i2c_port, cfg->address, cmd_buffer, buff_len, nostop);
+    int written_bytes = SSD1306_UNINIT_VAL;
+    written_bytes = i2c_write_blocking(cfg->i2c_port, cfg->address, cmd_buffer, buff_len, nostop);
+    if (buff_len != written_bytes)
+    {
+        return SSD1306_I2C_SEND_ERR;
+    }
+    return SSD1306_NO_ERR;
 }
 
 void ssd1306_set_pixel(ssd1306_t* scrn, uint8_t x, uint8_t y, bool pixel_on)
@@ -174,27 +204,4 @@ void ssd1306_v_line(ssd1306_t *scrn, uint8_t x, uint8_t y, uint8_t length)
     {
         ssd1306_set_pixel(scrn, x, i, true);
     }
-}
-
-void test_segments(uint8_t col_start, uint8_t col_count, uint8_t page_start, uint8_t page_count)
-{
-    ssd1306_t test_screen;
-    ssd1306_buffer_t test_buffer;
-    test_buffer.buffer[0] = 0;
-    test_buffer.length = 1;
-
-    //Check column mapping
-    for(uint8_t i=col_start; i<col_start+col_count;i++)
-    {
-        for(uint8_t x=0; x<8; x++)
-        {
-            printf("column: %d, page: %d, value: %d\n", i, page_start, x);
-            ssd1306_set_mem_addr_mode(&test_screen, ADDR_MODE_HORIZONTAL, i, i+1, page_start, page_start+1);
-            test_buffer.buffer[0] = (1 << x);
-            ssd1306_send_data(&test_screen, &test_buffer);
-            sleep_ms(400);
-        }
-    }
-    
-    //Check page mapping
 }
