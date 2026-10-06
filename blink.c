@@ -22,15 +22,6 @@
 #define INPUT_BUFF_LEN 10
 char input_buffer[INPUT_BUFF_LEN];
 
-ssd1306_t screen1 = {
-    .config = {
-        .address = SSD1306_ADDR,
-        .i2c_port = i2c0,
-        .baud = 400 * 1000,
-        .sda_pin = SSD1306_SDA_PIN,
-        .sck_pin = SSD1306_SCK_PIN,
-    }
-};
 int pico_led_init(void) {
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
@@ -56,12 +47,19 @@ void get_input(void)
             case 'p':
                 sscanf(input_buffer+2, "%d %d %d", &x, &y, &is_on);
                 printf("PXL (%d,%d) state: %d\n", x, y, is_on);
-                ssd1306_set_pixel(&screen1, x, y, is_on);
+                ssd1306_set_pixel(x, y, is_on);
                 break;
             case 'g':
                 sscanf(input_buffer+2, "%d %d", &x, &y);
-                is_on = ssd1306_get_pixel(&screen1, x, y);
+                is_on = ssd1306_get_pixel(x, y);
                 printf("(%d, %d) has state:%d\n", x, y, is_on);
+                break;
+            case 'l':
+                //draw line
+                break;
+            case 'c':
+                //clear screen cmd
+                ssd1306_fill_buff(0x00);
                 break;
             default:
                 printf("UNN CMD: %c\n", input_buffer[0]);
@@ -81,13 +79,13 @@ int main() {
     stdio_init_all();
     printf("Starting_program\n");
 
-    ssd1306_init(&screen1);
-    ssd1306_fill_buff(&screen1, 0x0);
-    ssd1306_draw(&screen1);
+    ssd1306_init();
+    ssd1306_fill_buff(0x0);
+    ssd1306_draw();
     printf("Main loop start\n");
     while (true) {
         get_input();
-        ssd1306_draw(&screen1);
+        ssd1306_draw();
         pico_set_led(true);
         sleep_ms(LED_DELAY_MS);
         pico_set_led(false);

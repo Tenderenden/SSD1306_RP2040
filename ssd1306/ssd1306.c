@@ -40,68 +40,67 @@ static ssd1306_t main_screen =
     .config = {
         .address = SSD1306_ADDR,
         .i2c_port = i2c0,
-        .baud = 400 * 1000,
+        .baud = 400000U,
         .sda_pin = SSD1306_SDA_PIN,
         .sck_pin = SSD1306_SCK_PIN,
     }
 };
 
-
-uint ssd1306_init(ssd1306_t* scrn) {
+uint ssd1306_init() {
     uint ret_val = SSD1306_UNINIT_VAL;
     printf("Initializing OLED\n");
     //Initialize buffer for full screen
-    scrn->buffer.length = SSD1306_WIDTH * SSD1306_HEIGHT / 8;
-    memset(scrn->buffer.buffer + 1, 0, scrn->buffer.length);
+    main_screen.buffer.length = SSD1306_WIDTH * SSD1306_HEIGHT / 8;
+    memset(main_screen.buffer.buffer + 1, 0, main_screen.buffer.length);
     //Add control byte to the first place in buffer
-    scrn->buffer.buffer[0] = 0x40;
+    main_screen.buffer.buffer[0] = 0x40;
 
     //None of official examples check i2c_init return value for errors
-    i2c_init(scrn->config.i2c_port, scrn->config.baud);
-    gpio_set_function(scrn->config.sda_pin, GPIO_FUNC_I2C);
-    gpio_set_function(scrn->config.sck_pin, GPIO_FUNC_I2C);
-    gpio_pull_up(scrn->config.sda_pin);
-    gpio_pull_up(scrn->config.sck_pin);
+    i2c_init(main_screen.config.i2c_port, main_screen.config.baud);
+    gpio_set_function(main_screen.config.sda_pin, GPIO_FUNC_I2C);
+    gpio_set_function(main_screen.config.sck_pin, GPIO_FUNC_I2C);
+    gpio_pull_up(main_screen.config.sda_pin);
+    gpio_pull_up(main_screen.config.sck_pin);
 
     for(uint8_t i=0; i<count_of(ssd1306_cfg_cmds);i++){
-        ret_val = ssd1306_send_one_cmd(scrn, ssd1306_cfg_cmds[i]);
+        ret_val = ssd1306_send_one_cmd(ssd1306_cfg_cmds[i]);
         if (SSD1306_NO_ERR != ret_val){
             return ret_val;
         }
     }
 
     //Set horizontal mode for full screen
-    ret_val = ssd1306_set_mem_addr_mode(scrn, ADDR_MODE_HORIZONTAL, 0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
+    ret_val = ssd1306_set_mem_addr_mode(ADDR_MODE_HORIZONTAL, 0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
     return ret_val;
 }
 
-static uint ssd1306_send_one_cmd(ssd1306_t* scrn, uint8_t cmd){
+static uint ssd1306_send_one_cmd(uint8_t cmd){
     uint8_t cmd_buffer[] = {0x80, cmd};
     uint ret_val = SSD1306_UNINIT_VAL;
-    ret_val = ssd1306_write_cmds(&(scrn->config), cmd_buffer, 2, false);
+    ret_val = ssd1306_write_cmds(cmd_buffer, 2, false);
     return ret_val;
 }
 
-static uint ssd1306_send_data(ssd1306_t* scrn, ssd1306_buffer_t *buffer)
+static uint ssd1306_send_data(ssd1306_buffer_t *buffer)
 {
     uint ret_val = SSD1306_UNINIT_VAL;
-    ret_val = ssd1306_write_cmds(&(scrn->config), buffer->buffer, (buffer->length)+1, false);
+    ret_val = ssd1306_write_cmds(buffer->buffer, (buffer->length)+1, false);
     return ret_val;
 }
 
-uint ssd1306_draw(ssd1306_t* scrn)
+uint ssd1306_draw()
 {
     uint ret_val = SSD1306_UNINIT_VAL;
-    ret_val = ssd1306_send_data(scrn, &scrn->buffer);
+    ret_val = ssd1306_send_data(&main_screen.buffer);
     return ret_val;
 }
 
-void ssd1306_fill_buff(ssd1306_t* scrn, uint8_t val)
+void ssd1306_fill_buff(uint8_t val)
 {
-    memset(scrn->buffer.buffer+1, val, scrn->buffer.length);
+    memset(main_screen.buffer.buffer+1, val, main_screen.buffer.length);
 }
 
-static uint ssd1306_set_mem_addr_mode(ssd1306_t* scrn, ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
+static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
 {
     //TODO: Send those commands in one go instead of dividing it like this
     uint ret_val = SSD1306_UNINIT_VAL;
@@ -109,8 +108,9 @@ static uint ssd1306_set_mem_addr_mode(ssd1306_t* scrn, ssd1306_addr_mode_t mode,
     // Set horizontal adressing mode
     cmds[1] = SSD1306_ADDRSET_MEMORY_ADDRESSING_MODE_CMD;
     cmds[2] = mode;
-    ret_val = ssd1306_write_cmds(&(scrn->config), cmds, 3, false);
+    ret_val = ssd1306_write_cmds(cmds, 3, false);
     if (SSD1306_NO_ERR != ret_val){
+        printf("Error\n");
         return ret_val;
     }
 
@@ -118,8 +118,9 @@ static uint ssd1306_set_mem_addr_mode(ssd1306_t* scrn, ssd1306_addr_mode_t mode,
     cmds[1] = SSD1306_SET_COLUMN_ADDRESS_CMD;
     cmds[2] = col_start; //0 - 127
     cmds[3] = col_stop; //0 - 127
-    ret_val = ssd1306_write_cmds(&(scrn->config), cmds, 4, false);
+    ret_val = ssd1306_write_cmds(cmds, 4, false);
     if (SSD1306_NO_ERR != ret_val){
+        printf("Error\n");
         return ret_val;
     }
 
@@ -127,17 +128,18 @@ static uint ssd1306_set_mem_addr_mode(ssd1306_t* scrn, ssd1306_addr_mode_t mode,
     cmds[1] = SSD1306_SET_PAGE_ADDRESS_CMD;
     cmds[2] = page_start; //0 - 7
     cmds[3] = page_stop; //0 - 7
-    ret_val = ssd1306_write_cmds(&(scrn->config), cmds, 4, false);
+    ret_val = ssd1306_write_cmds(cmds, 4, false);
     if (SSD1306_NO_ERR != ret_val){
+        printf("Error\n");
         return ret_val;
     }
     return SSD1306_NO_ERR;
 }
 
-static uint ssd1306_write_cmds(ssd1306_cfg_t* cfg, uint8_t *cmd_buffer, size_t buff_len, bool nostop)
+static uint ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len, bool nostop)
 {
     int written_bytes = SSD1306_UNINIT_VAL;
-    written_bytes = i2c_write_blocking(cfg->i2c_port, cfg->address, cmd_buffer, buff_len, nostop);
+    written_bytes = i2c_write_blocking(main_screen.config.i2c_port, main_screen.config.address, cmd_buffer, buff_len, nostop);
     if (buff_len != written_bytes)
     {
         return SSD1306_I2C_SEND_ERR;
@@ -145,7 +147,7 @@ static uint ssd1306_write_cmds(ssd1306_cfg_t* cfg, uint8_t *cmd_buffer, size_t b
     return SSD1306_NO_ERR;
 }
 
-void ssd1306_set_pixel(ssd1306_t* scrn, uint8_t x, uint8_t y, bool pixel_on)
+void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
 {
     if (x >= SSD1306_WIDTH || y >= SSD1306_HEIGHT) return;
 
@@ -155,23 +157,23 @@ void ssd1306_set_pixel(ssd1306_t* scrn, uint8_t x, uint8_t y, bool pixel_on)
     uint16_t index = 1 + (page * SSD1306_WIDTH) + x;
 
     if (pixel_on) {
-        scrn->buffer.buffer[index] |= (1 << bit);
+        main_screen.buffer.buffer[index] |= (1 << bit);
     } else {
-        scrn->buffer.buffer[index] &= ~(1 << bit);
+        main_screen.buffer.buffer[index] &= ~(1 << bit);
     }
     // printf("Col: %d \nPage: %d\nBit: %d\n", column, page, bit);
 }
 
-bool ssd1306_get_pixel(ssd1306_t* scrn, uint8_t x, uint8_t y)
+bool ssd1306_get_pixel(uint8_t x, uint8_t y)
 {
     bool ret_val;
     uint8_t page = y / 8;
     uint16_t index = 1 + (page * SSD1306_WIDTH) + x;
-    ret_val = (bool)((scrn->buffer.buffer[index]) & (1 << (y % 8)));
+    ret_val = (bool)((main_screen.buffer.buffer[index]) & (1 << (y % 8)));
     return ret_val;
 }
 
-void ssd1306_line(ssd1306_t *scrn, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
+void ssd1306_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
     /* source: https://zingl.github.io/bresenham.html */
     int dx = abs((int)x1-(int)x0);
@@ -182,7 +184,7 @@ void ssd1306_line(ssd1306_t *scrn, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y
     int e2;
 
     while (true) {
-        ssd1306_set_pixel(scrn, x0, y0, true);
+        ssd1306_set_pixel(x0, y0, true);
         if(x0 == x1 && y0 == y1) break;
         e2 = 2 * err;
         if (e2 >= dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
@@ -190,18 +192,18 @@ void ssd1306_line(ssd1306_t *scrn, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y
     }
 }
 
-void ssd1306_h_line(ssd1306_t *scrn, uint8_t x, uint8_t y, uint8_t length)
+void ssd1306_h_line(uint8_t x, uint8_t y, uint8_t length)
 {
     for(uint8_t i=x; i<(x+length); i++)
     {
-        ssd1306_set_pixel(scrn, i, y, true);
+        ssd1306_set_pixel(i, y, true);
     }
 }
 
-void ssd1306_v_line(ssd1306_t *scrn, uint8_t x, uint8_t y, uint8_t length)
+void ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length)
 {
     for(uint8_t i=y; i<(y+length); i++)
     {
-        ssd1306_set_pixel(scrn, x, i, true);
+        ssd1306_set_pixel(x, i, true);
     }
 }

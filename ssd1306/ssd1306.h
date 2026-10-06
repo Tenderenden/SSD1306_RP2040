@@ -94,20 +94,20 @@ typedef enum
 } ssd1306_err_t;
 
 /* Private functions */
-static uint ssd1306_send_one_cmd(ssd1306_t* scrn, uint8_t cmd);
-static uint ssd1306_send_data(ssd1306_t* scrn, ssd1306_buffer_t *buffer);
-static uint ssd1306_write_cmds(ssd1306_cfg_t* cfg, uint8_t *cmd_buffer, size_t buff_len, bool nostop);
-static uint ssd1306_set_mem_addr_mode(ssd1306_t* scrn, ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
+static uint ssd1306_send_one_cmd(uint8_t cmd);
+static uint ssd1306_send_data(ssd1306_buffer_t *buffer);
+static uint ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len, bool nostop);
+static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
 
 /* Public functions */
-uint ssd1306_init(ssd1306_t* scrn);
-uint ssd1306_draw(ssd1306_t* scrn);
-void ssd1306_set_pixel(ssd1306_t* scrn, uint8_t x, uint8_t y, bool pixel_on);
-void ssd1306_clear_buff(ssd1306_t* scrn);
-void ssd1306_fill_buff(ssd1306_t* scrn, uint8_t val);
-bool ssd1306_get_pixel(ssd1306_t* scrn, uint8_t x, uint8_t y);
-void ssd1306_line(ssd1306_t *scrn, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
-void ssd1306_h_line(ssd1306_t *scrn, uint8_t x, uint8_t y, uint8_t length);
-void ssd1306_v_line(ssd1306_t *scrn, uint8_t x, uint8_t y, uint8_t length);
+uint ssd1306_init();
+uint ssd1306_draw();
+void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on);
+void ssd1306_clear_buff();
+void ssd1306_fill_buff(uint8_t val);
+bool ssd1306_get_pixel(uint8_t x, uint8_t y);
+void ssd1306_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
+void ssd1306_h_line(uint8_t x, uint8_t y, uint8_t length);
+void ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length);
 
 #endif /* SSD1306_H */
