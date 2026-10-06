@@ -102,35 +102,21 @@ void ssd1306_fill_buff(uint8_t val)
 
 static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
 {
-    //TODO: Send those commands in one go instead of dividing it like this
     uint ret_val = SSD1306_UNINIT_VAL;
-    uint8_t cmds[] = {0x00, 0x0, 0x0, 0x0};
-    // Set horizontal adressing mode
-    cmds[1] = SSD1306_ADDRSET_MEMORY_ADDRESSING_MODE_CMD;
-    cmds[2] = mode;
-    ret_val = ssd1306_write_cmds(cmds, 3, false);
-    if (SSD1306_NO_ERR != ret_val){
-        printf("Error\n");
-        return ret_val;
-    }
+    uint8_t cmds[] = {
+        0x00, 
+        SSD1306_ADDRSET_MEMORY_ADDRESSING_MODE_CMD, 
+        mode, 
+        SSD1306_SET_COLUMN_ADDRESS_CMD,
+        col_start,
+        col_stop,
+        SSD1306_SET_PAGE_ADDRESS_CMD,
+        page_start,
+        page_stop
+    };
 
-    // Set column address
-    cmds[1] = SSD1306_SET_COLUMN_ADDRESS_CMD;
-    cmds[2] = col_start; //0 - 127
-    cmds[3] = col_stop; //0 - 127
-    ret_val = ssd1306_write_cmds(cmds, 4, false);
+    ret_val = ssd1306_write_cmds(cmds, 9, false);
     if (SSD1306_NO_ERR != ret_val){
-        printf("Error\n");
-        return ret_val;
-    }
-
-    // Set page address
-    cmds[1] = SSD1306_SET_PAGE_ADDRESS_CMD;
-    cmds[2] = page_start; //0 - 7
-    cmds[3] = page_stop; //0 - 7
-    ret_val = ssd1306_write_cmds(cmds, 4, false);
-    if (SSD1306_NO_ERR != ret_val){
-        printf("Error\n");
         return ret_val;
     }
     return SSD1306_NO_ERR;
