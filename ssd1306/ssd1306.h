@@ -12,7 +12,7 @@
 #define SSD1306_HEIGHT (32U)
 
 #define SSD1306_SDA_PIN (4U)
-#define SSD1306_SCK_PIN (5U)
+#define SSD1306_SCL_PIN (5U)
 
 /* Fundamental commands */
 #define SSD1306_SET_CONTRAST_CMD (0x81U)
@@ -54,26 +54,22 @@
 #define SSD1306_CHARGE_PUMP_VAL (0x14U)
 
 
-#define SSD1306_DATA_BUF_SIZE ((SSD1306_WIDTH * SSD1306_HEIGHT / 8)+1)
+#define SSD1306_DATA_BUF_SIZE (SSD1306_WIDTH * SSD1306_HEIGHT / 8)
 
 #define SSD1306_UNINIT_VAL (0xFFU)
 
-typedef struct ssd1306_buffer{
-    uint8_t buffer[SSD1306_DATA_BUF_SIZE];
-    size_t length;
-}ssd1306_buffer_t;
-
-typedef struct ssd1306_cfg{
+typedef struct ssd1306_i2c_cfg{
     uint32_t address;
     i2c_inst_t *i2c_port;
     uint baud;
     uint sda_pin;
     uint sck_pin;
-}ssd1306_cfg_t;
+}ssd1306_i2c_cfg_t;
 
 typedef struct ssd1306_type {
-    ssd1306_cfg_t config;
-    ssd1306_buffer_t buffer;
+    ssd1306_i2c_cfg_t i2c_cfg;
+    //Additional one for control byte
+    uint8_t buffer[SSD1306_DATA_BUF_SIZE+1];
 } ssd1306_t;
 
 typedef enum 
@@ -95,8 +91,8 @@ typedef enum
 
 /* Private functions */
 static uint ssd1306_send_one_cmd(uint8_t cmd);
-static uint ssd1306_send_data(ssd1306_buffer_t *buffer);
-static uint ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len, bool nostop);
+static uint ssd1306_send_data(uint8_t *buffer);
+static uint ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len);
 static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
 
 /* Public functions */
