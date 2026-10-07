@@ -12,37 +12,37 @@
 #include "pico/stdlib.h"
 
 static const uint8_t ssd1306_cfg_cmds[] = {
-        SSD1306_SET_DISPLAY_OFF_CMD,
-        SSD1306_SET_DISPLAY_CLK_DIVIDE_FREQ_CMD,
-        SSD1306_CLK_FREQ_VAL,
-        SSD1306_SET_MULTIPLEX_RATIO_CMD,
-        SSD1306_MUX_RATIO_32,
-        SSD1306_SET_DISPLAY_OFFSET_CMD,
-        SSD1306_DISP_OFFSET_VAL,
-        SSD1306_SET_DISPLAY_START_LINE_CMD,
-        SSD1306_SET_SEGMENT_REMAP_NORMAL_CMD,
-        SSD1306_SET_COM_SCAN_DIR_NORMAL_CMD,
-        SSD1306_SET_COM_HW_CONFIG_CMD,
-        SSD1306_HW_CONFIG_VAL,
-        SSD1306_SET_CONTRAST_CMD,
-        SSD1306_CONTRAST_VAL,
-        SSD1306_DISPLAY_ON_RAM_CMD,
-        SSD1306_SET_NORMAL_DISPLAY_CMD,
-        SSD1306_CHARGE_PUMP_SETTING_CMD,
-        SSD1306_CHARGE_PUMP_VAL,
-        SSD1306_SET_DISPLAY_ON_CMD,
-        SSD1306_DISPLAY_ON_FULL_CMD,
-        SSD1306_DISPLAY_ON_RAM_CMD
+    SSD1306_SET_DISPLAY_OFF_CMD,
+    SSD1306_SET_DISPLAY_CLK_DIVIDE_FREQ_CMD,
+    SSD1306_CLK_FREQ_VAL,
+    SSD1306_SET_MULTIPLEX_RATIO_CMD,
+    SSD1306_MUX_RATIO_32,
+    SSD1306_SET_DISPLAY_OFFSET_CMD,
+    SSD1306_DISP_OFFSET_VAL,
+    SSD1306_SET_DISPLAY_START_LINE_CMD,
+    SSD1306_SET_SEGMENT_REMAP_NORMAL_CMD,
+    SSD1306_SET_COM_SCAN_DIR_NORMAL_CMD,
+    SSD1306_SET_COM_HW_CONFIG_CMD,
+    SSD1306_HW_CONFIG_VAL,
+    SSD1306_SET_CONTRAST_CMD,
+    SSD1306_CONTRAST_VAL,
+    SSD1306_DISPLAY_ON_RAM_CMD,
+    SSD1306_SET_NORMAL_DISPLAY_CMD,
+    SSD1306_CHARGE_PUMP_SETTING_CMD,
+    SSD1306_CHARGE_PUMP_VAL,
+    SSD1306_SET_DISPLAY_ON_CMD,
+    SSD1306_DISPLAY_ON_FULL_CMD,
+    SSD1306_DISPLAY_ON_RAM_CMD
     };
 
 static ssd1306_t main_screen = 
 {
-    .config = {
+    .i2c_cfg = {
         .address = SSD1306_ADDR,
         .i2c_port = i2c0,
         .baud = 400000U,
         .sda_pin = SSD1306_SDA_PIN,
-        .sck_pin = SSD1306_SCK_PIN,
+        .sck_pin = SSD1306_SCL_PIN,
     }
 };
 
@@ -50,17 +50,16 @@ uint ssd1306_init() {
     uint ret_val = SSD1306_UNINIT_VAL;
     printf("Initializing OLED\n");
     //Initialize buffer for full screen
-    main_screen.buffer.length = SSD1306_WIDTH * SSD1306_HEIGHT / 8;
-    memset(main_screen.buffer.buffer + 1, 0, main_screen.buffer.length);
+    ssd1306_clear_buff();
     //Add control byte to the first place in buffer
-    main_screen.buffer.buffer[0] = 0x40;
+    main_screen.buffer[0] = 0x40;
 
     //None of official examples check i2c_init return value for errors
-    i2c_init(main_screen.config.i2c_port, main_screen.config.baud);
-    gpio_set_function(main_screen.config.sda_pin, GPIO_FUNC_I2C);
-    gpio_set_function(main_screen.config.sck_pin, GPIO_FUNC_I2C);
-    gpio_pull_up(main_screen.config.sda_pin);
-    gpio_pull_up(main_screen.config.sck_pin);
+    i2c_init(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.baud);
+    gpio_set_function(main_screen.i2c_cfg.sda_pin, GPIO_FUNC_I2C);
+    gpio_set_function(main_screen.i2c_cfg.sck_pin, GPIO_FUNC_I2C);
+    gpio_pull_up(main_screen.i2c_cfg.sda_pin);
+    gpio_pull_up(main_screen.i2c_cfg.sck_pin);
 
     for(uint8_t i=0; i<count_of(ssd1306_cfg_cmds);i++){
         ret_val = ssd1306_send_one_cmd(ssd1306_cfg_cmds[i]);
@@ -77,27 +76,27 @@ uint ssd1306_init() {
 static uint ssd1306_send_one_cmd(uint8_t cmd){
     uint8_t cmd_buffer[] = {0x80, cmd};
     uint ret_val = SSD1306_UNINIT_VAL;
-    ret_val = ssd1306_write_cmds(cmd_buffer, 2, false);
+    ret_val = ssd1306_write_cmds(cmd_buffer, 2);
     return ret_val;
 }
 
-static uint ssd1306_send_data(ssd1306_buffer_t *buffer)
+static uint ssd1306_send_data(uint8_t *buffer)
 {
     uint ret_val = SSD1306_UNINIT_VAL;
-    ret_val = ssd1306_write_cmds(buffer->buffer, (buffer->length)+1, false);
+    ret_val = ssd1306_write_cmds(buffer, SSD1306_DATA_BUF_SIZE+1);
     return ret_val;
 }
 
 uint ssd1306_draw()
 {
     uint ret_val = SSD1306_UNINIT_VAL;
-    ret_val = ssd1306_send_data(&main_screen.buffer);
+    ret_val = ssd1306_send_data(main_screen.buffer);
     return ret_val;
 }
 
 void ssd1306_fill_buff(uint8_t val)
 {
-    memset(main_screen.buffer.buffer+1, val, main_screen.buffer.length);
+    memset(main_screen.buffer+1, val, SSD1306_DATA_BUF_SIZE);
 }
 
 static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
@@ -115,17 +114,17 @@ static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_star
         page_stop
     };
 
-    ret_val = ssd1306_write_cmds(cmds, 9, false);
+    ret_val = ssd1306_write_cmds(cmds, 9);
     if (SSD1306_NO_ERR != ret_val){
         return ret_val;
     }
     return SSD1306_NO_ERR;
 }
 
-static uint ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len, bool nostop)
+static uint ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len)
 {
     int written_bytes = SSD1306_UNINIT_VAL;
-    written_bytes = i2c_write_blocking(main_screen.config.i2c_port, main_screen.config.address, cmd_buffer, buff_len, nostop);
+    written_bytes = i2c_write_blocking(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.address, cmd_buffer, buff_len, false);
     if (buff_len != written_bytes)
     {
         return SSD1306_I2C_SEND_ERR;
@@ -143,9 +142,9 @@ void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
     uint16_t index = 1 + (page * SSD1306_WIDTH) + x;
 
     if (pixel_on) {
-        main_screen.buffer.buffer[index] |= (1 << bit);
+        main_screen.buffer[index] |= (1 << bit);
     } else {
-        main_screen.buffer.buffer[index] &= ~(1 << bit);
+        main_screen.buffer[index] &= ~(1 << bit);
     }
     // printf("Col: %d \nPage: %d\nBit: %d\n", column, page, bit);
 }
@@ -155,7 +154,7 @@ bool ssd1306_get_pixel(uint8_t x, uint8_t y)
     bool ret_val;
     uint8_t page = y / 8;
     uint16_t index = 1 + (page * SSD1306_WIDTH) + x;
-    ret_val = (bool)((main_screen.buffer.buffer[index]) & (1 << (y % 8)));
+    ret_val = (bool)((main_screen.buffer[index]) & (1 << (y % 8)));
     return ret_val;
 }
 
@@ -192,4 +191,9 @@ void ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length)
     {
         ssd1306_set_pixel(x, i, true);
     }
+}
+
+void ssd1306_clear_buff()
+{
+    ssd1306_fill_buff(0x00);
 }
