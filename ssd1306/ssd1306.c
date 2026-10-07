@@ -51,8 +51,6 @@ uint ssd1306_init() {
     printf("Initializing OLED\n");
     //Initialize buffer for full screen
     ssd1306_clear_buff();
-    //Add control byte to the first place in buffer
-    main_screen.buffer[0] = 0x40;
 
     //None of official examples check i2c_init return value for errors
     i2c_init(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.baud);
@@ -83,7 +81,9 @@ static uint ssd1306_send_one_cmd(uint8_t cmd){
 static uint ssd1306_send_data(uint8_t *buffer)
 {
     uint ret_val = SSD1306_UNINIT_VAL;
-    ret_val = ssd1306_write_cmds(buffer, SSD1306_DATA_BUF_SIZE+1);
+    const uint8_t control_byte[] = {0x40};
+    ret_val = i2c_write_burst_blocking(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.address, control_byte, 1);
+    ret_val = i2c_write_blocking(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.address, buffer, SSD1306_DATA_BUF_SIZE, false);
     return ret_val;
 }
 
@@ -96,7 +96,7 @@ uint ssd1306_draw()
 
 void ssd1306_fill_buff(uint8_t val)
 {
-    memset(main_screen.buffer+1, val, SSD1306_DATA_BUF_SIZE);
+    memset(main_screen.buffer, val, SSD1306_DATA_BUF_SIZE);
 }
 
 static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
@@ -139,7 +139,7 @@ void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
     uint8_t page = y / 8;
     uint8_t bit = y % 8;
     
-    uint16_t index = 1 + (page * SSD1306_WIDTH) + x;
+    uint16_t index =(page * SSD1306_WIDTH) + x;
 
     if (pixel_on) {
         main_screen.buffer[index] |= (1 << bit);
@@ -153,7 +153,7 @@ bool ssd1306_get_pixel(uint8_t x, uint8_t y)
 {
     bool ret_val;
     uint8_t page = y / 8;
-    uint16_t index = 1 + (page * SSD1306_WIDTH) + x;
+    uint16_t index = (page * SSD1306_WIDTH) + x;
     ret_val = (bool)((main_screen.buffer[index]) & (1 << (y % 8)));
     return ret_val;
 }
