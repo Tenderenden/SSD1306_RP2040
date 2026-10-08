@@ -1,5 +1,4 @@
 #include "ssd1306.h"
-#include <hardware/i2c.h>
 #include <pico/platform/compiler.h>
 #include <pico/types.h>
 #include <stdbool.h>
@@ -8,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pico/stdlib.h"
+#include "i2c_hal.h"
 
 static uint8_t ssd1306_cfg_cmds[] = {
     SSD1306_SET_DISPLAY_OFF_CMD,
@@ -34,57 +33,23 @@ static uint8_t ssd1306_cfg_cmds[] = {
     SSD1306_DISPLAY_ON_RAM_CMD
     };
 
-static ssd1306_t main_screen = 
-{
-    .i2c_cfg = {
-        .address = SSD1306_ADDR,
-        .i2c_port = i2c0,
-        .baud = 400000U,
-        .sda_pin = SSD1306_SDA_PIN,
-        .sck_pin = SSD1306_SCL_PIN,
-    }
-};
+static ssd1306_t main_screen;
 
 uint ssd1306_init() {
     uint ret_val = SSD1306_UNINIT_VAL;
     printf("Initializing OLED\n");
-    //Initialize buffer for full screen
-    ssd1306_clear_buff();
-
-    //None of official examples check i2c_init return value for errors
-    i2c_init(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.baud);
-    gpio_set_function(main_screen.i2c_cfg.sda_pin, GPIO_FUNC_I2C);
-    gpio_set_function(main_screen.i2c_cfg.sck_pin, GPIO_FUNC_I2C);
-    gpio_pull_up(main_screen.i2c_cfg.sda_pin);
-    gpio_pull_up(main_screen.i2c_cfg.sck_pin);
-
-    ret_val = ssd1306_write_cmds(SSD1306_CMD_STREAM_TYPE, ssd1306_cfg_cmds, count_of(ssd1306_cfg_cmds));
-
+    ret_val = i2c_hal_init(); //TODO: Think how to verify if this init went well. Especially i2c_init from sdk
+    ret_val = i2c_hal_write(I2C_CMD_STREAM_TYPE, SSD1306_ADDR, ssd1306_cfg_cmds, count_of(ssd1306_cfg_cmds));
     //Set horizontal mode for full screen
     ret_val = ssd1306_set_mem_addr_mode(ADDR_MODE_HORIZONTAL, 0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
-    return ret_val;
-}
-
-static uint ssd1306_send_one_cmd(uint8_t cmd){
-    uint8_t cmd_buffer[] = {0x80, cmd};
-    uint ret_val = SSD1306_UNINIT_VAL;
-    ret_val = ssd1306_write_cmds(SSD1306_CMD_TYPE, cmd_buffer, 2);
-    return ret_val;
-}
-
-static uint ssd1306_send_data(uint8_t *buffer)
-{
-    uint ret_val = SSD1306_UNINIT_VAL;
-    const uint8_t control_byte[] = {0x40};
-    ret_val = i2c_write_burst_blocking(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.address, control_byte, 1);
-    ret_val = i2c_write_blocking(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.address, buffer, SSD1306_DATA_BUF_SIZE, false);
+    ssd1306_clear_buff();
     return ret_val;
 }
 
 uint ssd1306_draw()
 {
     uint ret_val = SSD1306_UNINIT_VAL;
-    ret_val = ssd1306_send_data(main_screen.buffer);
+    ret_val = i2c_hal_write(I2C_DATA_STREAM_TYPE, SSD1306_ADDR, main_screen.buffer, SSD1306_DATA_BUF_SIZE);
     return ret_val;
 }
 
@@ -107,22 +72,9 @@ static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_star
         page_stop
     };
 
-    ret_val = ssd1306_write_cmds(SSD1306_CMD_STREAM_TYPE, cmds, 8);
+    ret_val = i2c_hal_write(I2C_CMD_STREAM_TYPE,SSD1306_ADDR, cmds, 8);
     if (SSD1306_NO_ERR != ret_val){
         return ret_val;
-    }
-    return SSD1306_NO_ERR;
-}
-
-static uint ssd1306_write_cmds(uint8_t type, uint8_t *cmd_buffer, size_t buff_len)
-{
-    int written_bytes = SSD1306_UNINIT_VAL;
-    const uint8_t control_byte[] = {type};
-    written_bytes = i2c_write_burst_blocking(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.address, control_byte, 1);
-    written_bytes = i2c_write_blocking(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.address, cmd_buffer, buff_len, false);
-    if (buff_len != written_bytes)
-    {
-        return SSD1306_I2C_SEND_ERR;
     }
     return SSD1306_NO_ERR;
 }
@@ -146,6 +98,7 @@ void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
 
 bool ssd1306_get_pixel(uint8_t x, uint8_t y)
 {
+    if (x >= SSD1306_WIDTH || y >= SSD1306_HEIGHT) return false;
     bool ret_val;
     uint8_t page = y / 8;
     uint16_t index = (page * SSD1306_WIDTH) + x;
