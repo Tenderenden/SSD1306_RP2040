@@ -8,10 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/_intsup.h>
 #include "pico/stdlib.h"
 
-static const uint8_t ssd1306_cfg_cmds[] = {
+static uint8_t ssd1306_cfg_cmds[] = {
     SSD1306_SET_DISPLAY_OFF_CMD,
     SSD1306_SET_DISPLAY_CLK_DIVIDE_FREQ_CMD,
     SSD1306_CLK_FREQ_VAL,
@@ -59,12 +58,7 @@ uint ssd1306_init() {
     gpio_pull_up(main_screen.i2c_cfg.sda_pin);
     gpio_pull_up(main_screen.i2c_cfg.sck_pin);
 
-    for(uint8_t i=0; i<count_of(ssd1306_cfg_cmds);i++){
-        ret_val = ssd1306_send_one_cmd(ssd1306_cfg_cmds[i]);
-        if (SSD1306_NO_ERR != ret_val){
-            return ret_val;
-        }
-    }
+    ret_val = ssd1306_write_cmds(SSD1306_CMD_STREAM_TYPE, ssd1306_cfg_cmds, count_of(ssd1306_cfg_cmds));
 
     //Set horizontal mode for full screen
     ret_val = ssd1306_set_mem_addr_mode(ADDR_MODE_HORIZONTAL, 0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
@@ -74,7 +68,7 @@ uint ssd1306_init() {
 static uint ssd1306_send_one_cmd(uint8_t cmd){
     uint8_t cmd_buffer[] = {0x80, cmd};
     uint ret_val = SSD1306_UNINIT_VAL;
-    ret_val = ssd1306_write_cmds(cmd_buffer, 2);
+    ret_val = ssd1306_write_cmds(SSD1306_CMD_TYPE, cmd_buffer, 2);
     return ret_val;
 }
 
@@ -103,7 +97,6 @@ static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_star
 {
     uint ret_val = SSD1306_UNINIT_VAL;
     uint8_t cmds[] = {
-        0x00, 
         SSD1306_ADDRSET_MEMORY_ADDRESSING_MODE_CMD, 
         mode, 
         SSD1306_SET_COLUMN_ADDRESS_CMD,
@@ -114,16 +107,18 @@ static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_star
         page_stop
     };
 
-    ret_val = ssd1306_write_cmds(cmds, 9);
+    ret_val = ssd1306_write_cmds(SSD1306_CMD_STREAM_TYPE, cmds, 8);
     if (SSD1306_NO_ERR != ret_val){
         return ret_val;
     }
     return SSD1306_NO_ERR;
 }
 
-static uint ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len)
+static uint ssd1306_write_cmds(uint8_t type, uint8_t *cmd_buffer, size_t buff_len)
 {
     int written_bytes = SSD1306_UNINIT_VAL;
+    const uint8_t control_byte[] = {type};
+    written_bytes = i2c_write_burst_blocking(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.address, control_byte, 1);
     written_bytes = i2c_write_blocking(main_screen.i2c_cfg.i2c_port, main_screen.i2c_cfg.address, cmd_buffer, buff_len, false);
     if (buff_len != written_bytes)
     {

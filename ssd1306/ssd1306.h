@@ -58,6 +58,11 @@
 
 #define SSD1306_UNINIT_VAL (0xFFU)
 
+#define SSD1306_DATA_TYPE (0x40U)
+#define SSD1306_CMD_TYPE (0x80U)
+#define SSD1306_CMD_STREAM_TYPE (0x00U)
+
+
 typedef struct ssd1306_i2c_cfg{
     uint32_t address;
     i2c_inst_t *i2c_port;
@@ -92,7 +97,7 @@ typedef enum
 /* Private functions */
 static uint ssd1306_send_one_cmd(uint8_t cmd);
 static uint ssd1306_send_data(uint8_t *buffer);
-static uint ssd1306_write_cmds(uint8_t *cmd_buffer, size_t buff_len);
+static uint ssd1306_write_cmds(uint8_t type, uint8_t *cmd_buffer, size_t buff_len);
 static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
 
 /* Public functions */
