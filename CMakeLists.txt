@@ -44,6 +44,7 @@ add_executable(blink
 target_link_libraries(blink 
     pico_stdlib
     ssd1306
+    i2c_hal
 )
 
 # pico_enable_stdio_usb(blink 1)
