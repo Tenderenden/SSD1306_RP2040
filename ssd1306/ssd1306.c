@@ -1,13 +1,4 @@
 #include "ssd1306.h"
-#include <pico/platform/compiler.h>
-#include <pico/types.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "i2c_hal.h"
 
 static uint8_t ssd1306_cfg_cmds[] = {
     SSD1306_SET_DISPLAY_OFF_CMD,

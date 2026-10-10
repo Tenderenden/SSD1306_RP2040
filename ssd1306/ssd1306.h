@@ -1,11 +1,11 @@
 #ifndef SSD1306_H
 #define SSD1306_H
 
-#include "hardware/i2c.h"
-#include <errno.h>
 #include <pico/types.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "i2c_hal.h"
 
 #define SSD1306_ADDR (0x3CU)
 #define SSD1306_WIDTH (128U)

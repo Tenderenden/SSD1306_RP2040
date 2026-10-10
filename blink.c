@@ -1,16 +1,9 @@
 // board documentation: https://www.waveshare.com/wiki/RP2040-Zero
-#include "pico/stdlib.h"
-#include "ssd1306.h"
 #include <hardware/gpio.h>
 #include <hardware/uart.h>
 #include <pico/stdio.h>
-#include <pico/types.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
-#include <string.h>
-#include <wchar.h>
+#include "ssd1306.h"
 
 #define LED_PIN 3
 
