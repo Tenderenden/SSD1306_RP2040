@@ -87,7 +87,7 @@ void ssd1306_clear_buff();
 void ssd1306_fill_buff(uint8_t val);
 bool ssd1306_get_pixel(uint8_t x, uint8_t y);
 void ssd1306_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
-void ssd1306_h_line(uint8_t x, uint8_t y, uint8_t length);
-void ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length);
+uint ssd1306_h_line(uint8_t x, uint8_t y, uint8_t length);
+uint ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length);
 
 #endif /* SSD1306_H */
