@@ -1,7 +1,6 @@
 // board documentation: https://www.waveshare.com/wiki/RP2040-Zero
 #include "pico/stdlib.h"
 #include "ssd1306.h"
-#include "ssd1306/ssd1306.h"
 #include <hardware/gpio.h>
 #include <hardware/uart.h>
 #include <pico/stdio.h>
@@ -45,11 +44,13 @@ void get_input(void)
         // printf("input_buffer:__%10s__\n", input_buffer);
         switch (input_buffer[0]) {
             case 'p':
+                //set pixel cmd "p x y"
                 sscanf(input_buffer+2, "%d %d %d", &x, &y, &is_on);
                 printf("PXL (%d,%d) state: %d\n", x, y, is_on);
                 ssd1306_set_pixel(x, y, is_on);
                 break;
             case 'g':
+                //get pixel value cmd "p x y"
                 sscanf(input_buffer+2, "%d %d", &x, &y);
                 is_on = ssd1306_get_pixel(x, y);
                 printf("(%d, %d) has state:%d\n", x, y, is_on);
@@ -68,6 +69,7 @@ void get_input(void)
     }
     index = 0;
     for(size_t i=0; i<INPUT_BUFF_LEN; i++){
+        //After parsing cmd fill buffer with null terminator chars
         input_buffer[i] = '\0';
     }
 }
@@ -80,16 +82,21 @@ int main() {
     printf("Starting_program\n");
 
     ssd1306_init();
-    ssd1306_fill_buff(0x0);
     ssd1306_draw();
     printf("Main loop start\n");
+    uint8_t iterator = 0;
+    bool pixel_val = false;
     while (true) {
         get_input();
+        pixel_val = ~(ssd1306_get_pixel(iterator, iterator));
+        ssd1306_set_pixel(iterator, iterator, pixel_val);
         ssd1306_draw();
         pico_set_led(true);
         sleep_ms(LED_DELAY_MS);
         pico_set_led(false);
         sleep_ms(LED_DELAY_MS);
+        iterator++;
+        iterator %= SSD1306_HEIGHT;
         // printf("Loop %d done\n", loop_counter++);
     }
 }

@@ -11,29 +11,23 @@
 
 static uint8_t ssd1306_cfg_cmds[] = {
     SSD1306_SET_DISPLAY_OFF_CMD,
-    SSD1306_SET_DISPLAY_CLK_DIVIDE_FREQ_CMD,
-    SSD1306_CLK_FREQ_VAL,
-    SSD1306_SET_MULTIPLEX_RATIO_CMD,
-    SSD1306_MUX_RATIO_32,
-    SSD1306_SET_DISPLAY_OFFSET_CMD,
-    SSD1306_DISP_OFFSET_VAL,
+    SSD1306_SET_DISPLAY_CLK_DIVIDE_FREQ_CMD, SSD1306_CLK_FREQ_VAL,
+    SSD1306_SET_MULTIPLEX_RATIO_CMD, SSD1306_MUX_RATIO_32,
+    SSD1306_SET_DISPLAY_OFFSET_CMD, SSD1306_DISP_OFFSET_VAL,
     SSD1306_SET_DISPLAY_START_LINE_CMD,
     SSD1306_SET_SEGMENT_REMAP_NORMAL_CMD,
     SSD1306_SET_COM_SCAN_DIR_NORMAL_CMD,
-    SSD1306_SET_COM_HW_CONFIG_CMD,
-    SSD1306_HW_CONFIG_VAL,
-    SSD1306_SET_CONTRAST_CMD,
-    SSD1306_CONTRAST_VAL,
+    SSD1306_SET_COM_HW_CONFIG_CMD, SSD1306_HW_CONFIG_VAL,
+    SSD1306_SET_CONTRAST_CMD, SSD1306_CONTRAST_VAL,
     SSD1306_DISPLAY_ON_RAM_CMD,
     SSD1306_SET_NORMAL_DISPLAY_CMD,
-    SSD1306_CHARGE_PUMP_SETTING_CMD,
-    SSD1306_CHARGE_PUMP_VAL,
+    SSD1306_CHARGE_PUMP_SETTING_CMD, SSD1306_CHARGE_PUMP_VAL,
     SSD1306_SET_DISPLAY_ON_CMD,
     SSD1306_DISPLAY_ON_FULL_CMD,
     SSD1306_DISPLAY_ON_RAM_CMD
     };
 
-static ssd1306_t main_screen;
+static uint8_t screen_data_buffer[SSD1306_DATA_BUF_SIZE];
 
 uint ssd1306_init() {
     uint ret_val = SSD1306_UNINIT_VAL;
@@ -49,13 +43,13 @@ uint ssd1306_init() {
 uint ssd1306_draw()
 {
     uint ret_val = SSD1306_UNINIT_VAL;
-    ret_val = i2c_hal_write(I2C_DATA_STREAM_TYPE, SSD1306_ADDR, main_screen.buffer, SSD1306_DATA_BUF_SIZE);
+    ret_val = i2c_hal_write(I2C_DATA_STREAM_TYPE, SSD1306_ADDR, screen_data_buffer, SSD1306_DATA_BUF_SIZE);
     return ret_val;
 }
 
 void ssd1306_fill_buff(uint8_t val)
 {
-    memset(main_screen.buffer, val, SSD1306_DATA_BUF_SIZE);
+    memset(screen_data_buffer, val, SSD1306_DATA_BUF_SIZE);
 }
 
 static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
@@ -89,9 +83,9 @@ void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
     uint16_t index =(page * SSD1306_WIDTH) + x;
 
     if (pixel_on) {
-        main_screen.buffer[index] |= (1 << bit);
+        screen_data_buffer[index] |= (1 << bit);
     } else {
-        main_screen.buffer[index] &= ~(1 << bit);
+        screen_data_buffer[index] &= ~(1 << bit);
     }
     // printf("Col: %d \nPage: %d\nBit: %d\n", column, page, bit);
 }
@@ -102,7 +96,7 @@ bool ssd1306_get_pixel(uint8_t x, uint8_t y)
     bool ret_val;
     uint8_t page = y / 8;
     uint16_t index = (page * SSD1306_WIDTH) + x;
-    ret_val = (bool)((main_screen.buffer[index]) & (1 << (y % 8)));
+    ret_val = (bool)((screen_data_buffer[index]) & (1 << (y % 8)));
     return ret_val;
 }
 
@@ -125,20 +119,24 @@ void ssd1306_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
     }
 }
 
-void ssd1306_h_line(uint8_t x, uint8_t y, uint8_t length)
+uint ssd1306_h_line(uint8_t x, uint8_t y, uint8_t length)
 {
-    for(uint8_t i=x; i<(x+length); i++)
+    if((x+length) >= SSD1306_WIDTH) return SSD1306_GENERIC_ERR;
+    for(uint16_t i=x; i<(x+length); i++)
     {
         ssd1306_set_pixel(i, y, true);
     }
+    return SSD1306_NO_ERR;
 }
 
-void ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length)
+uint ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length)
 {
-    for(uint8_t i=y; i<(y+length); i++)
+    if((y+length) >= SSD1306_HEIGHT) return SSD1306_GENERIC_ERR;
+    for(uint16_t i=y; i<(y+length); i++)
     {
         ssd1306_set_pixel(x, i, true);
     }
+    return SSD1306_NO_ERR;
 }
 
 void ssd1306_clear_buff()
