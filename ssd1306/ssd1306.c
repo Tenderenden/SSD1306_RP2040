@@ -20,20 +20,31 @@ static uint8_t ssd1306_cfg_cmds[] = {
 
 static uint8_t screen_data_buffer[SSD1306_DATA_BUF_SIZE];
 
-uint ssd1306_init() {
-    uint ret_val = SSD1306_UNINIT_VAL;
+/* Private functions */
+static ssd1306_status_t ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
+
+ssd1306_status_t ssd1306_init(void) {
+    ssd1306_status_t ret_val = SSD1306_NOT_INITIALIZED_ERR;
     printf("Initializing OLED\n");
-    ret_val = i2c_hal_init(); //TODO: Think how to verify if this init went well. Especially i2c_init from sdk
+    i2c_hal_init(); //TODO: Think how to verify if this init went well. Especially i2c_init from sdk
     ret_val = i2c_hal_write(I2C_CMD_STREAM_TYPE, SSD1306_ADDR, ssd1306_cfg_cmds, count_of(ssd1306_cfg_cmds));
+    if(ret_val != count_of(ssd1306_cfg_cmds)) {
+        return SSD1306_I2C_INIT_ERR;
+    }
+
     //Set horizontal mode for full screen
     ret_val = ssd1306_set_mem_addr_mode(ADDR_MODE_HORIZONTAL, 0, SSD1306_WIDTH-1, 0, (SSD1306_HEIGHT/8)-1);
+    if (ret_val != SSD1306_NO_ERR) {
+        return ret_val;
+    }
     ssd1306_clear_buff();
+    ret_val = ssd1306_draw();
     return ret_val;
 }
 
-uint ssd1306_draw()
+ssd1306_status_t ssd1306_draw(void)
 {
-    uint ret_val = SSD1306_UNINIT_VAL;
+    ssd1306_status_t ret_val = SSD1306_NOT_INITIALIZED_ERR;
     ret_val = i2c_hal_write(I2C_DATA_STREAM_TYPE, SSD1306_ADDR, screen_data_buffer, SSD1306_DATA_BUF_SIZE);
     return ret_val;
 }
@@ -43,9 +54,9 @@ void ssd1306_fill_buff(uint8_t val)
     memset(screen_data_buffer, val, SSD1306_DATA_BUF_SIZE);
 }
 
-static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
+static ssd1306_status_t ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop)
 {
-    uint ret_val = SSD1306_UNINIT_VAL;
+    ssd1306_status_t ret_val = SSD1306_NOT_INITIALIZED_ERR;
     uint8_t cmds[] = {
         SSD1306_ADDRSET_MEMORY_ADDRESSING_MODE_CMD, 
         mode, 
@@ -110,9 +121,9 @@ void ssd1306_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
     }
 }
 
-uint ssd1306_h_line(uint8_t x, uint8_t y, uint8_t length)
+ssd1306_status_t ssd1306_h_line(uint8_t x, uint8_t y, uint8_t length)
 {
-    if((x+length) >= SSD1306_WIDTH) return SSD1306_GENERIC_ERR;
+    if((SSD1306_WIDTH < (x+length)) || (SSD1306_HEIGHT < y)) return SSD1306_INV_PARAM_ERR;
     for(uint16_t i=x; i<(x+length); i++)
     {
         ssd1306_set_pixel(i, y, true);
@@ -120,9 +131,9 @@ uint ssd1306_h_line(uint8_t x, uint8_t y, uint8_t length)
     return SSD1306_NO_ERR;
 }
 
-uint ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length)
+ssd1306_status_t ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length)
 {
-    if((y+length) >= SSD1306_HEIGHT) return SSD1306_GENERIC_ERR;
+    if((SSD1306_HEIGHT < (y+length)) || (SSD1306_WIDTH < x)) return SSD1306_INV_PARAM_ERR;
     for(uint16_t i=y; i<(y+length); i++)
     {
         ssd1306_set_pixel(x, i, true);
@@ -130,7 +141,7 @@ uint ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length)
     return SSD1306_NO_ERR;
 }
 
-void ssd1306_clear_buff()
+void ssd1306_clear_buff(void)
 {
     ssd1306_fill_buff(0x00);
 }

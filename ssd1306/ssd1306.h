@@ -50,14 +50,7 @@
 #define SSD1306_CONTRAST_VAL (0x7FU)
 #define SSD1306_CHARGE_PUMP_VAL (0x14U)
 
-
 #define SSD1306_DATA_BUF_SIZE (SSD1306_WIDTH * SSD1306_HEIGHT / 8)
-
-#define SSD1306_UNINIT_VAL (0xFFU)
-
-typedef struct ssd1306_type {
-    uint8_t buffer[SSD1306_DATA_BUF_SIZE];
-} ssd1306_t;
 
 typedef enum 
 {
@@ -70,24 +63,22 @@ typedef enum
 typedef enum
 {
     SSD1306_NO_ERR = 0,
-    SSD1306_GENERIC_ERR,
+    SSD1306_NOT_INITIALIZED_ERR,
+    SSD1306_INV_PARAM_ERR,
     SSD1306_I2C_INIT_ERR,
-    SSD1306_I2C_SEND_ERR
+    SSD1306_I2C_WRITE_ERR,
 
-} ssd1306_err_t;
-
-/* Private functions */
-static uint ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint8_t col_start, uint8_t col_stop, uint8_t page_start, uint8_t page_stop);
+} ssd1306_status_t;
 
 /* Public functions */
-uint ssd1306_init();
-uint ssd1306_draw();
+ssd1306_status_t ssd1306_init(void);
+ssd1306_status_t ssd1306_draw(void);
 void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on);
-void ssd1306_clear_buff();
+void ssd1306_clear_buff(void);
 void ssd1306_fill_buff(uint8_t val);
 bool ssd1306_get_pixel(uint8_t x, uint8_t y);
 void ssd1306_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
-uint ssd1306_h_line(uint8_t x, uint8_t y, uint8_t length);
-uint ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length);
+ssd1306_status_t ssd1306_h_line(uint8_t x, uint8_t y, uint8_t length);
+ssd1306_status_t ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length);
 
 #endif /* SSD1306_H */
