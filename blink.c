@@ -80,7 +80,7 @@ int main() {
     else {
         printf("SSD1306 Init err: %d\n", rc);
     }
-    ssd1306_draw();
+    ssd1306_update();
     printf("Main loop start\n");
     uint8_t iterator = 0;
     bool pixel_val = false;
@@ -88,7 +88,7 @@ int main() {
         get_input();
         pixel_val = ~(ssd1306_get_pixel(iterator, iterator));
         ssd1306_set_pixel(iterator, iterator, pixel_val);
-        ssd1306_draw();
+        ssd1306_update();
         pico_set_led(true);
         sleep_ms(LED_DELAY_MS);
         pico_set_led(false);

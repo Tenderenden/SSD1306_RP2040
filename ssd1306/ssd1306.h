@@ -72,7 +72,7 @@ typedef enum
 
 /* Public functions */
 ssd1306_status_t ssd1306_init(void);
-ssd1306_status_t ssd1306_draw(void);
+ssd1306_status_t ssd1306_update(void);
 void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on);
 void ssd1306_clear_buff(void);
 void ssd1306_fill_buff(uint8_t val);
