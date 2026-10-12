@@ -1,4 +1,6 @@
 #include "ssd1306.h"
+#include <stdlib.h>
+#include <string.h>
 
 static uint8_t ssd1306_cfg_cmds[] = {
     SSD1306_SET_DISPLAY_OFF_CMD,
@@ -14,7 +16,6 @@ static uint8_t ssd1306_cfg_cmds[] = {
     SSD1306_SET_NORMAL_DISPLAY_CMD,
     SSD1306_CHARGE_PUMP_SETTING_CMD, SSD1306_CHARGE_PUMP_VAL,
     SSD1306_SET_DISPLAY_ON_CMD,
-    SSD1306_DISPLAY_ON_FULL_CMD,
     SSD1306_DISPLAY_ON_RAM_CMD
     };
 
