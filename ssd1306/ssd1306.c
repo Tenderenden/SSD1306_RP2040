@@ -25,7 +25,6 @@ static ssd1306_status_t ssd1306_set_mem_addr_mode(ssd1306_addr_mode_t mode, uint
 
 ssd1306_status_t ssd1306_init(void) {
     ssd1306_status_t ret_val = SSD1306_NOT_INITIALIZED_ERR;
-    printf("Initializing OLED\n");
     i2c_hal_init(); //TODO: Think how to verify if this init went well. Especially i2c_init from sdk
     ret_val = i2c_hal_write(I2C_CMD_STREAM_TYPE, SSD1306_ADDR, ssd1306_cfg_cmds, count_of(ssd1306_cfg_cmds));
     if(ret_val != count_of(ssd1306_cfg_cmds)) {
@@ -89,7 +88,6 @@ void ssd1306_set_pixel(uint8_t x, uint8_t y, bool pixel_on)
     } else {
         screen_data_buffer[index] &= ~(1 << bit);
     }
-    // printf("Col: %d \nPage: %d\nBit: %d\n", column, page, bit);
 }
 
 bool ssd1306_get_pixel(uint8_t x, uint8_t y)
