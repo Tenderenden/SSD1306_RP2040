@@ -37,11 +37,11 @@ ssd1306_status_t ssd1306_init(void) {
         return ret_val;
     }
     ssd1306_clear_buff();
-    ret_val = ssd1306_draw();
+    ret_val = ssd1306_update();
     return ret_val;
 }
 
-ssd1306_status_t ssd1306_draw(void)
+ssd1306_status_t ssd1306_update(void)
 {
     ssd1306_status_t ret_val = SSD1306_NOT_INITIALIZED_ERR;
     ret_val = i2c_hal_write(I2C_DATA_STREAM_TYPE, SSD1306_ADDR, screen_data_buffer, SSD1306_DATA_BUF_SIZE);
