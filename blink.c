@@ -69,12 +69,17 @@ void get_input(void)
 
 int main() {
     int rc = pico_led_init();
-    int loop_counter = 0;
     hard_assert(rc == PICO_OK);
     stdio_init_all();
     printf("Starting_program\n");
 
-    ssd1306_init();
+    rc = ssd1306_init();
+    if (SSD1306_NO_ERR == rc) {
+        printf("SSD1306 init successful\n");
+    }
+    else {
+        printf("SSD1306 Init err: %d\n", rc);
+    }
     ssd1306_draw();
     printf("Main loop start\n");
     uint8_t iterator = 0;
@@ -90,6 +95,5 @@ int main() {
         sleep_ms(LED_DELAY_MS);
         iterator++;
         iterator %= SSD1306_HEIGHT;
-        // printf("Loop %d done\n", loop_counter++);
     }
 }
