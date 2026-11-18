@@ -1,6 +1,7 @@
 #include "ssd1306.h"
 #include <stdlib.h>
 #include <string.h>
+#include "fonts/fonts.h"
 
 static uint8_t ssd1306_cfg_cmds[] = {
     SSD1306_SET_DISPLAY_OFF_CMD,
@@ -143,4 +144,35 @@ ssd1306_status_t ssd1306_v_line(uint8_t x, uint8_t y, uint8_t length)
 void ssd1306_clear_buff(void)
 {
     ssd1306_fill_buff(0x00);
+}
+
+ssd1306_status_t ssd1306_write_char(uint8_t x, uint8_t y, unsigned char input)
+{
+    if(((x + FONT_WIDTH) > SSD1306_WIDTH)||((y + FONT_HEIGTH) > SSD1306_HEIGHT)){
+        return SSD1306_INV_PARAM_ERR;
+    }
+    int index = (int)input - (int)' ';
+    unsigned char character_line;
+    for(uint8_t i=0; i<FONT_WIDTH; i++){
+        character_line = ssd1306xled_font6x8[(index * FONT_WIDTH) + i];
+        for(uint8_t j=0; j<FONT_HEIGTH; j++){
+            if(character_line & (1<<j)){
+                ssd1306_set_pixel(x+i, y+j, true);
+            }
+            else {
+                ssd1306_set_pixel(x+i, y+j, false);
+            }
+        }
+    }
+    return SSD1306_NO_ERR;
+}
+
+ssd1306_status_t ssd1306_write_string(uint8_t x, uint8_t y, unsigned char* text)
+{
+    uint32_t iter=0;
+    while(text[iter]!='\0'){
+        ssd1306_write_char(x + (FONT_WIDTH * iter), y, text[iter]);
+        iter++;
+    }
+    return SSD1306_NO_ERR;
 }

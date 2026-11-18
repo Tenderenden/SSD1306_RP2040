@@ -86,8 +86,13 @@ int main() {
     bool pixel_val = false;
     while (true) {
         get_input();
-        pixel_val = ~(ssd1306_get_pixel(iterator, iterator));
-        ssd1306_set_pixel(iterator, iterator, pixel_val);
+        // pixel_val = ~(ssd1306_get_pixel(iterator, iterator));
+        // ssd1306_set_pixel(iterator, iterator, pixel_val);
+        ssd1306_write_string(0, 0, "Test line");
+        ssd1306_write_string(0, 8, "Second line of text is here");
+        ssd1306_write_string(0, 16, "Third line of text as well");
+        ssd1306_write_string(0, 24, "Last line");
+
         ssd1306_update();
         pico_set_led(true);
         sleep_ms(LED_DELAY_MS);
